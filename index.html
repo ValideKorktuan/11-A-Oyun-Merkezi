@@ -357,6 +357,23 @@ h1.logo svg{animation:none;filter:drop-shadow(0 5px 12px rgba(232,131,107,.5))}
 .okt{display:flex;flex-wrap:wrap;gap:8px;max-height:210px;overflow-y:auto}.okm{display:inline-flex;align-items:center;gap:2px;padding:4px;border-radius:9px;background:rgba(255,255,255,.07)}.okm small{font-size:10px;color:var(--mut);margin-left:4px}
 .okb{flex-wrap:wrap;gap:6px}.okb button{flex:1 1 28%;min-width:0;padding:10px 4px;font-size:14px}
 .oklg{font-size:13px;color:var(--mut);line-height:1.5;text-align:center}
+/* okey: masa + ıstaka */
+.okpn{background:radial-gradient(120% 140% at 50% 0,#17803f,#0c4a26);border:3px solid #7a4a1d;box-shadow:inset 0 0 40px rgba(0,0,0,.4),0 10px 24px rgba(0,0,0,.4)}.okpn small{color:#cfe9d6}.okpn .okpile b{color:#fff}
+.okzs{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}@media(max-width:520px){.okzs{grid-template-columns:1fr}}
+.okz{padding:10px;border-radius:16px;background:linear-gradient(160deg,#0f6b36,#0a4224);border:2px solid #1f9a55;box-shadow:inset 0 0 24px rgba(0,0,0,.35)}
+.okz.me{border-color:var(--acc)}.okz.on{box-shadow:0 0 16px rgba(255,200,87,.55),inset 0 0 24px rgba(0,0,0,.35)}
+.okzh{display:flex;justify-content:space-between;align-items:center;gap:6px}.okzh b{font-size:14px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.okzh small{font-size:11px;color:#bfe3c9;white-space:nowrap}
+.okzl{font-size:11px;color:#bfe3c9;margin:8px 0 3px}.okz .okt{max-height:none;overflow:visible;gap:5px}.okz .okm{background:rgba(0,0,0,.22)}
+.okdc{display:flex;flex-wrap:wrap;gap:2px}.okem{opacity:.5;font-size:12px}
+.ot.xs{width:19px;height:27px;font-size:11px;border-radius:4px;box-shadow:0 2px 0 #a8946e}.ot.xs i{width:4px;height:4px;bottom:2px}.ot.last{outline:2px solid var(--acc)}
+.okrp{padding:10px 8px 12px;background:linear-gradient(#6b4423,#4a2d14);border:2px solid #8a5a2b;box-shadow:inset 0 2px 0 rgba(255,255,255,.12),0 12px 28px rgba(0,0,0,.45)}
+.rkw{position:relative;padding:8px 6px 14px;border-radius:12px;background:linear-gradient(#8a5a2b,#6e4520);box-shadow:inset 0 4px 10px rgba(0,0,0,.5)}
+.rkw::after{content:"";position:absolute;left:6px;right:6px;bottom:4px;height:5px;border-radius:3px;background:#4a2d14}
+.rkb{display:grid;grid-template-columns:repeat(11,1fr);gap:5px 3px}
+.sl{position:relative;width:100%;max-width:46px;justify-self:center;aspect-ratio:5/7;border-radius:6px;background:rgba(0,0,0,.22);box-shadow:inset 0 2px 4px rgba(0,0,0,.45)}.sl.dt{background:rgba(255,200,87,.45);box-shadow:0 0 0 2px var(--acc)}
+.rkb .ot{position:absolute;inset:0;width:100%;height:100%;font-size:clamp(11px,3.6vw,20px);touch-action:none;cursor:grab}
+.rkt{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}.rkt small{flex:1 1 100%;color:#e5cfae;text-align:center;font-size:11px}.rkt button{flex:1;padding:7px 8px;font-size:13px}
+.gh{position:fixed;z-index:9999;pointer-events:none;margin:0;transform:scale(1.18) rotate(-5deg);box-shadow:0 14px 20px rgba(0,0,0,.5)}
 </style>
 </head>
 <body>
@@ -394,7 +411,7 @@ var view=$('#view'),stop=null,tab='oyun';
 /* BULUT AYARI: Firebase Realtime Database adresini buraya yaz (örn. 'https://proje-adi-default-rtdb.firebaseio.com').
    Boş bırakırsan hesaplar sadece bu tarayıcıda saklanır. Doluysa hesaplar sunucuda tutulur ve dosya adı/cihaz değişse de çalışır. */
 var CLOUD_URL='https://a-oyun-merkezi-default-rtdb.firebaseio.com';
-var KEY='oyunmerkezi:v1',START=1000,VER='3.2',db,me=null,meKey=null,bal=0;
+var KEY='oyunmerkezi:v1',START=1000,VER='3.1',db,me=null,meKey=null,bal=0;
 /* Hesaplar tek bir kayıt altında tutulur. Güncellemede bu anahtar değişmediği ve
    load() eksik alanları tamamladığı için hesaplar ve bakiyeler korunur. */
 function norm(d){
@@ -1801,6 +1818,19 @@ function blocked(s){var h=gs.hands[s];return (gs.tk>=0&&h.indexOf(gs.tk)>=0)||(g
     $('#mb').onclick=function(){startBots()};$('#mo').onclick=olobby;bindR()}
   function startBots(keep){stopAll();mode=0;seat=0;var n=shuffle(BN.slice()),sts=keep&&gs?gs.seats:[{k:meKey,n:me.name,b:0},{k:'',n:n[0]+' 🤖',b:1},{k:'',n:n[1]+' 🤖',b:1},{k:'',n:n[2]+' 🤖',b:1}];
     gs=keep&&gs?newGame(sts,gs.tot,(gs.st+1)%4):newGame(sts);sel=-1;ss=[];paidId='';drawGame();sched()}
+  var NS=33,CO=11,rack=[],rkId='';
+  function byColor(s){var h=H(s),o=[];for(var c=0;c<4;c++)o.push(h.filter(function(t){return t.c===c&&!t.w}).sort(function(x,y){return x.n-y.n}).map(function(t){return t.id}));o.push(h.filter(function(t){return t.w}).map(function(t){return t.id}));return o}
+  function syncRack(h){var st={},hv={};h.forEach(function(id){st[id]=1});rack=rack.map(function(id){if(id>=0&&st[id]&&!hv[id]){hv[id]=1;return id}return -1});h.forEach(function(id){if(!hv[id]){var i=rack.indexOf(-1);if(i>=0)rack[i]=id}})}
+  function fillRack(bl){var r=[],p=0,i;for(i=0;i<NS;i++)r.push(-1);bl.forEach(function(b){if(!b.length)return;var c=p%CO;if(c&&c+b.length>CO)p+=CO-c;b.forEach(function(id){if(p<NS)r[p++]=id});p++});rack=r;syncRack(gs.hands[seat<0?0:seat])}
+  function dragT(e,b){if(e.button>0)return;var id=+b.dataset.id,x0=e.clientX,y0=e.clientY,g=null,tg=-1,W=b.offsetWidth,Hh=b.offsetHeight;
+    function at(x,y){var n=document.elementFromPoint(x,y),q=n&&n.closest&&n.closest('#okh .sl');return q?+q.dataset.i:-1}
+    function mv(ev){if(!g){if(Math.abs(ev.clientX-x0)+Math.abs(ev.clientY-y0)<8)return;g=b.cloneNode(true);g.className+=' gh';g.style.width=W+'px';g.style.height=Hh+'px';document.body.appendChild(g);b.style.opacity='.25'}
+      g.style.left=ev.clientX-W/2+'px';g.style.top=ev.clientY-Hh/2+'px';var t=at(ev.clientX,ev.clientY);
+      if(t!==tg){var o=el.querySelector('.sl.dt');if(o)o.classList.remove('dt');tg=t;if(t>=0)el.querySelectorAll('#okh .sl')[t].classList.add('dt')}}
+    function up(ev){document.removeEventListener('pointermove',mv);document.removeEventListener('pointerup',up);document.removeEventListener('pointercancel',up);
+      if(g){g.remove();var t=at(ev.clientX,ev.clientY),f=rack.indexOf(id);if(t>=0&&t!==f){var o=rack[t];rack[t]=id;rack[f]=o}drawGame();return}
+      var k=ss.indexOf(id);if(k>=0)ss.splice(k,1);else if(multi)ss.push(id);else ss=[id];drawGame()}
+    document.addEventListener('pointermove',mv);document.addEventListener('pointerup',up);document.addEventListener('pointercancel',up)}
   function drawGame(){if(dead||!gs)return;
     ss=ss.filter(function(id){return gs.hands[seat<0?0:seat].indexOf(id)>=0});sel=ss.length===1?ss[0]:-1;
     var me2=seat<0?0:seat,play=seat>=0&&gs.turn===seat&&gs.win<0,a=arrC(me2),i,s,pb='',dc='',h='';
@@ -1808,13 +1838,17 @@ function blocked(s){var h=gs.hands[s];return (gs.tk>=0&&h.indexOf(gs.tk)>=0)||(g
       pb+='<div class="okpl'+(gs.turn===s&&gs.win<0?' on':'')+'"><span>'+(s===me2&&!mode?avH(pfd(),26):q.b?'🤖':'👤')+'</span><b>'+esc(q.n)+(s===me2?' (sen)':'')+'</b><small>'+gs.hands[s].length+' taş'+(gs.op[s]===2?' · çift açtı':gs.op[s]?' · açtı':'')+' · Σ '+gs.tot[s]+'</small></div>'}
     var ind=tl(gs.ind),pr=okPairs(H(me2)),sa=ss.length>1?okArr(ss.map(tl)):null,sp=ss.length>1?okPairs(ss.map(tl)):null,
       selOk=!!sa&&!sa.rest.length&&sa.groups.length>0,selP=!!sp&&!sp.rest.length&&sp.n>0;
-    for(i=0;i<4;i++){s=(me2+i)%4;var d=gs.disc[s],tp=d.length?d[d.length-1]:-1;
-      dc+='<div class="okd'+(s===(me2+3)%4?' hl':'')+'"><small>'+esc(nm(s).split(' ')[0])+'</small>'+(tp>=0?th(tl(tp),' sm'):'<b class="ot sm em"></b>')+'</div>'}
-    var ct='<div class="okc"><div><small>Gösterge</small>'+th(ind)+'</div><div><small>Okey</small>'+th({c:gs.ok.c,n:gs.ok.n,w:1,f:0})+'</div><div class="okpile"><small>Deste</small><b>'+gs.pile.length+'</b></div></div><div class="okds">'+dc+'</div>';
+    var zn='';for(i=0;i<4;i++){s=(me2+i)%4;var d=gs.disc[s],ms=gs.table.filter(function(m){return m.o===s});
+      zn+='<div class="okz'+(s===me2?' me':'')+(gs.turn===s&&gs.win<0?' on':'')+'"><div class="okzh"><b>'+(s===me2?'🙂 ':gs.seats[s].b?'🤖 ':'👤 ')+esc(gs.seats[s].n)+(s===me2?' (sen)':'')+'</b><small>'+(gs.op[s]===2?'çift açtı':gs.op[s]?'açtı':'açmadı')+'</small></div>'+
+      '<div class="okzl">Açtığı perler</div><div class="okt">'+(ms.length?ms.map(function(m){return '<div class="okm">'+m.e.map(function(x){var tt=tl(x.id);return th({c:x.c,n:x.n,w:tt.w,f:tt.f},' sm',1)}).join('')+'<small>'+(m.k==='p'?'Çift':m.k==='r'?'Seri':'Per')+'</small></div>'}).join(''):'<span class="okem">—</span>')+'</div>'+
+      '<div class="okzl">Attığı taşlar'+(s===(me2+3)%4?' · sıradaki alabilir':'')+'</div><div class="okdc">'+(d.length?d.map(function(id,j){return th(tl(id),' xs'+(j===d.length-1?' last':''))}).join(''):'<span class="okem">—</span>')+'</div></div>'}
+    var ct='<div class="okc"><div><small>Gösterge</small>'+th(ind)+'</div><div><small>Okey</small>'+th({c:gs.ok.c,n:gs.ok.n,w:1,f:0})+'</div><div class="okpile"><small>Deste</small><b>'+gs.pile.length+'</b></div></div>';
     var tb=gs.table.length?gs.table.map(function(m){return '<div class="okm">'+m.e.map(function(x){var tt=tl(x.id);return th({c:x.c,n:x.n,w:tt.w,f:tt.f},' sm',1)}).join('')+'<small>'+(m.k==='p'?'Çift':m.k==='r'?'Seri':'Per')+' · '+esc(nm(m.o).split(' ')[0])+'</small></div>'}).join(''):'<div class="s-empty">Henüz açılan per yok.</div>';
     function rb(t){return '<button class="ot'+(t.w?' ow':'')+(ss.indexOf(t.id)>=0?' sel':'')+'" data-id="'+t.id+'" style="--c:'+CL[t.c]+'">'+(t.f?'★':t.n)+'<i></i></button>'}
     var rest=a.rest.slice().sort(function(x,y){return x.c-y.c||x.n-y.n}),
       rk=a.groups.map(function(g){return '<span class="okg">'+g.e.map(function(x){return rb(tl(x.id))}).join('')+'</span>'}).join('')+(rest.length?'<span class="okg">'+rest.map(rb).join('')+'</span>':'');
+    if(rkId!==gs.id||!rack.length){rkId=gs.id;rack=[];for(i=0;i<NS;i++)rack.push(-1);fillRack(byColor(me2))}
+    syncRack(gs.hands[me2]);var rkh='';for(i=0;i<NS;i++){var r2=rack[i];rkh+='<div class="sl" data-i="'+i+'">'+(r2>=0?rb(tl(r2)):'')+'</div>'}
     var inH=sel>=0&&gs.hands[me2].indexOf(sel)>=0,dph=play&&gs.ph==='disc',
       canD=play&&gs.ph==='draw',canT=canD&&canTake(me2),canA=dph&&inH,
       canO=dph&&gs.op[me2]!==2&&(sa?(selOk&&(gs.op[me2]||sa.pts>=needFor(gs.hands[me2].length,sa))&&tkOk(me2,sa.groups)):(gs.op[me2]?a.groups.length>0:a.pts>=needFor(gs.hands[me2].length,a)&&tkOk(me2,a.groups))),
@@ -1824,8 +1858,8 @@ function blocked(s){var h=gs.hands[s];return (gs.tk>=0&&h.indexOf(gs.tk)>=0)||(g
     canA=canA&&!blk;
     var why=dph&&ss.length&&!canI?(gs.op[me2]===0?' İşlemek için önce elini açmalısın.':' Seçili taş masadaki pere uymuyor (seride bir uca turda en fazla 2, toplam 3 taş işlenir).'):'',
       st=gs.win>=0?'':play?(gs.ph==='draw'?'Sıra sende: deste ya da yandaki taşı al.':blk?'Aldığın taşı/okeyi bir pere kullanmadan taş atamazsın.':'Sıra sende: bir taş seç, at ya da işle.'+why):nm(gs.turn)+' oynuyor...';
-    h=rb2()+'<div class="okpb">'+pb+'</div><div class="panel okpn">'+ct+'</div><div class="panel"><h3>Masadaki perler</h3><div class="okt">'+tb+'</div></div>'+
-      '<div class="panel"><div class="okh" id="okh">'+rk+'</div><div class="msg">'+(gs.op[me2]===2?'Çift açtın ✓':gs.op[me2]?'Açtın ✓':'Açılabilir: <b>'+a.pts+'</b>/'+gs.mo+' puan · <b>'+pr.n+'</b>/'+gs.mp+' çift')+(ss.length>1?' · seçili: '+ss.length+' taş '+(selOk?'✓ per/seri':selP?'✓ çift':'✗ geçersiz'):'')+'</div>'+
+    h=rb2()+'<div class="okpb">'+pb+'</div><div class="panel okpn">'+ct+'</div><div class="okzs">'+zn+'</div>'+
+      '<div class="panel okrp"><div class="rkw"><div class="rkb" id="okh">'+rkh+'</div></div><div class="rkt"><button class="ghost" id="oz">🧩 Perleri diz</button><button class="ghost" id="oc">🎨 Renge göre diz</button><small>Taşı sürükleyip ıstakada istediğin yere bırak</small></div><div class="msg">'+(gs.op[me2]===2?'Çift açtın ✓':gs.op[me2]?'Açtın ✓':'Açılabilir: <b>'+a.pts+'</b>/'+gs.mo+' puan · <b>'+pr.n+'</b>/'+gs.mp+' çift')+(ss.length>1?' · seçili: '+ss.length+' taş '+(selOk?'✓ per/seri':selP?'✓ çift':'✗ geçersiz'):'')+'</div>'+
       '<div class="row okb"><button id="od"'+(canD?'':' disabled')+'>🂠 Çek</button><button id="ot"'+(canT?'':' disabled')+'>↩ Yandan al</button><button id="oa"'+(canA?'':' disabled')+'>At</button><button id="oo" class="out"'+(canO?'':' disabled')+'>'+(gs.op[me2]?'Per indir':'Aç')+'</button><button id="op" class="out"'+(canP?'':' disabled')+'>'+(gs.op[me2]?'Çift indir':'Çift aç')+'</button><button id="oi" class="ghost"'+(canI?'':' disabled')+'>İşle</button><button id="os" class="ghost"'+(canS?'':' disabled')+'>Okey al</button><button id="oh" class="ghost"'+(dph&&!blk?'':' disabled')+'>💡 İpucu</button><button id="om" class="'+(multi?'out':'ghost')+'">'+(multi?'☑':'☐')+' Çoklu</button></div></div>'+
       '<div class="panel"><div class="msg" style="min-height:0;font-weight:bold">'+st+'</div><div class="oklg">'+gs.lg.slice(-4).map(function(l){return '<div>'+esc(l)+'</div>'}).join('')+'</div></div>';
     if(gs.win>=0){var k=fk(),rows=gs.seats.map(function(q,s2){var w=s2===gs.win&&!gs.dr,v=sc(s2);return '<div class="s-row n"><div class="s-i"><b>'+(w?'🏆 ':'')+esc(q.n)+(gs.rk[s2]?' 🏅':'')+'</b><small>'+(w?'eli bitirdi':gs.op[s2]?(gs.op[s2]===2?'çift açtı':'açtı')+' · kalan '+rem(s2):'açmadı')+(gs.rk[s2]?' · rekor −101':'')+' · toplam '+gs.tot[s2]+'</small></div><b>'+(v>0?'+':'')+v+'</b></div>'}).join('');
@@ -1833,7 +1867,10 @@ function blocked(s){var h=gs.hands[s];return (gs.tk>=0&&h.indexOf(gs.tk)>=0)||(g
       if(gs.win===seat&&!gs.dr&&paidId!==gs.id){paidId=gs.id;burst();bonus(1500)}}
     h+='<div class="row"><button class="ghost" id="olv">'+(mode?'Odadan çık':'Menüye dön')+'</button></div>';
     el.innerHTML=h;bindR();
-    el.querySelectorAll('#okh .ot').forEach(function(b){b.onclick=function(){var id=+b.dataset.id,k=ss.indexOf(id);if(k>=0)ss.splice(k,1);else if(multi)ss.push(id);else ss=[id];drawGame()}});
+    el.querySelectorAll('#okh .ot').forEach(function(b){b.onpointerdown=function(e){dragT(e,b)};b.onclick=null});
+    el.querySelectorAll('#okh .sl').forEach(function(q){if(!q.firstChild)q.onclick=function(){if(sel>=0){var f=rack.indexOf(sel);rack[f]=-1;rack[+q.dataset.i]=sel;drawGame()}}});
+    $('#oz').onclick=function(){fillRack(a.groups.map(function(g){return g.e.map(function(x){return x.id})}).concat([a.rest.slice().sort(function(x,y){return x.c-y.c||x.n-y.n}).map(function(t){return t.id})]));drawGame()};
+    $('#oc').onclick=function(){fillRack(byColor(me2));drawGame()};
     function act(fn){if(seat<0||gs.turn!==seat||gs.win>=0)return;fn();sel=-1;ss=[];commit()}
     $('#od').onclick=function(){act(function(){if(gs.ph==='draw')drawP(seat)})};
     $('#ot').onclick=function(){act(function(){if(gs.ph==='draw')takeD(seat)})};
