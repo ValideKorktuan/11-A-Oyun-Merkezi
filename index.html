@@ -1738,8 +1738,11 @@ function bust(){var go=function(){location.replace(location.pathname+'?u='+Date.
 function chkVer(){if(location.protocol==='file:')return;
   function tx(r){return r.ok?r.text():''}
   Promise.all([Promise.resolve(''),fetch(location.pathname+'?c='+Date.now(),{cache:'reload'}).then(tx)]).then(function(a){
-    var m=/VER='([^']+)'/.exec(a[1]);if(!a[1]||$('#upd')||!m||m[1]===VER)return;
-    var d=document.createElement('div');d.id='upd';d.setAttribute('role','status');d.textContent='🔄 Yeni sürüm var - güncellemek için dokun';
+    var m=/VER='([^']+)'/.exec(a[1]);if(!a[1]||!m||m[1]===VER)return;
+    var tried='';try{tried=sessionStorage.getItem('om-au')}catch(e){}
+    if(tried!==m[1]&&!document.body.classList.contains('pl')){try{sessionStorage.setItem('om-au',m[1])}catch(e){}flushPlay();return bust()}
+    if($('#upd'))return;
+    var d=document.createElement('div');d.id='upd';d.setAttribute('role','status');d.textContent='🔄 Yeni sürüm var - oyundan çıkınca otomatik güncellenecek (ya da dokun)';
     d.style.cssText='position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:70;max-width:92vw;background:#ffc857;color:#1d2b53;padding:11px 16px;border-radius:12px;font-weight:bold;cursor:pointer;box-shadow:0 6px 20px rgba(0,0,0,.4);text-align:center';
     d.onclick=bust;document.body.appendChild(d)}).catch(function(){})}
 setTimeout(chkVer,2000);setInterval(chkVer,30000);setInterval(banChk,15000);setInterval(function(){if(me)grantSync()},60000);
