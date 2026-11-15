@@ -261,6 +261,27 @@ canvas.sn{transform:translateZ(0)}
 .cf{position:absolute;left:50%;top:48%;transform:translateX(-50%);font-size:30px;font-weight:800;color:#7be0a4;text-shadow:0 2px 10px rgba(0,0,0,.6);pointer-events:none;animation:cf 1.3s ease-out forwards}
 @keyframes cf{to{transform:translate(-50%,-90px);opacity:0}}
 .stage::after{content:'';position:absolute;inset:0;pointer-events:none;border-radius:inherit;box-shadow:inset 0 0 70px rgba(0,0,0,.4)}
+/* profil */
+.tab{padding-left:6px;padding-right:6px;font-size:15px}
+.av{--s:40px;position:relative;flex:none;display:inline-flex;align-items:center;justify-content:center;width:var(--s);height:var(--s);border-radius:50%;padding:3px;box-sizing:border-box;background:rgba(255,255,255,.18)}
+.av>i,.av>img{position:relative;z-index:1;width:100%;height:100%;border-radius:50%;background:#1b2a55;display:flex;align-items:center;justify-content:center;font-style:normal;font-size:calc(var(--s)*.5);object-fit:cover}
+.fr-gold{background:linear-gradient(135deg,#fff0a8,#d4a017 50%,#fff0a8);box-shadow:0 0 12px rgba(255,200,60,.7)}
+.fr-rainbow::before{content:'';position:absolute;inset:0;border-radius:50%;background:conic-gradient(#f43f5e,#f59e0b,#eab308,#22c55e,#06b6d4,#6366f1,#d946ef,#f43f5e);animation:avs 3s linear infinite}
+.fr-neon{background:#22d3ee;animation:avn 1.6s ease-in-out infinite alternate}
+.fr-fire{background:linear-gradient(0deg,#ef4444,#f59e0b,#fde047);animation:avf .9s ease-in-out infinite alternate}
+.fr-emerald{background:linear-gradient(135deg,#6ee7b7,#059669);box-shadow:0 0 10px rgba(16,185,129,.6)}
+.fr-royal{background:linear-gradient(135deg,#c084fc,#6d28d9 50%,#fbbf24);box-shadow:0 0 12px rgba(168,85,247,.6)}
+@keyframes avs{to{transform:rotate(360deg)}}
+@keyframes avn{from{box-shadow:0 0 4px #22d3ee}to{box-shadow:0 0 16px #22d3ee,0 0 28px rgba(34,211,238,.5)}}
+@keyframes avf{from{box-shadow:0 0 6px #ef4444}to{box-shadow:0 0 16px #f59e0b}}
+.tg{font-style:normal;font-size:10.5px;font-weight:800;padding:2px 8px;border-radius:99px;margin-left:6px;vertical-align:middle;white-space:nowrap}
+.pfc{display:flex;align-items:center;gap:14px;padding:14px;border:1px solid var(--line);border-radius:16px;background:var(--panel);margin-bottom:10px}
+.pfn{display:flex;flex-direction:column;gap:4px;min-width:0}.pfn b{font-size:20px}.pfn .tg{margin:0;align-self:flex-start}.pfn small{color:var(--mut)}
+.pg{display:grid;grid-template-columns:repeat(auto-fill,minmax(54px,1fr));gap:8px;margin-top:8px}.pgt{grid-template-columns:repeat(auto-fill,minmax(110px,1fr))}
+.pi{padding:6px;font-size:24px;background:rgba(255,255,255,.06);color:var(--ink);box-shadow:none;border:2px solid transparent;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px}
+.pi.on{border-color:var(--acc);background:rgba(255,200,87,.15)}
+.pi small{font-size:11px;font-weight:normal;color:var(--mut)}
+.pi .tg{margin:0}.pgt .pi{font-size:12px;padding:9px 4px}
 </style>
 </head>
 <body>
@@ -271,6 +292,7 @@ canvas.sn{transform:translateZ(0)}
     <button class="tab on" id="t-oyun">Oyunlar</button>
     <button class="tab" id="t-kumar">Kumar</button>
     <button class="tab" id="t-sosyal">👥 Sosyal<i class="s-bdg" id="sbdg" hidden></i></button>
+    <button class="tab" id="t-profil">👤 Profil</button>
   </div>
   <div id="view"></div>
   <p class="note">Puanlar tamamen sanaldır, gerçek para içermez. Hesaplar otomatik kaydedilir. <span id="ver"></span></p>
@@ -283,7 +305,7 @@ var view=$('#view'),stop=null,tab='oyun';
 /* BULUT AYARI: Firebase Realtime Database adresini buraya yaz (örn. 'https://proje-adi-default-rtdb.firebaseio.com').
    Boş bırakırsan hesaplar sadece bu tarayıcıda saklanır. Doluysa hesaplar sunucuda tutulur ve dosya adı/cihaz değişse de çalışır. */
 var CLOUD_URL='https://a-oyun-merkezi-default-rtdb.firebaseio.com';
-var KEY='oyunmerkezi:v1',START=1000,VER='1.7',db,me=null,meKey=null,bal=0;
+var KEY='oyunmerkezi:v1',START=1000,VER='1.8',db,me=null,meKey=null,bal=0;
 /* Hesaplar tek bir kayıt altında tutulur. Güncellemede bu anahtar değişmediği ve
    load() eksik alanları tamamladığı için hesaplar ve bakiyeler korunur. */
 function norm(d){
@@ -425,8 +447,9 @@ function loginView(msg){
 function enter(k){
   hold=!!CLOUD_URL;meKey=k;me=db.users[k];bal=me.bal;db.last=k;persist();
   $('#tabs').hidden=false;
-  $('#acct').innerHTML='<div class="acct"><span>👤 <b>'+esc(me.name)+'</b> <small id="cl" style="color:var(--mut)"></small></span><button class="ghost" id="bk">Yedek al</button><button class="ghost" id="kd">Kodu kopyala</button><button class="ghost" id="lo2">Çıkış</button></div>'+
+  $('#acct').innerHTML='<div class="acct"><span style="display:inline-flex;align-items:center;gap:8px"><span id="acv" style="display:inline-flex;align-items:center;gap:8px;cursor:pointer"></span> <small id="cl" style="color:var(--mut)"></small></span><button class="ghost" id="bk">Yedek al</button><button class="ghost" id="kd">Kodu kopyala</button><button class="ghost" id="lo2">Çıkış</button></div>'+
    '<div class="pbar"><div class="pc"><i>🪙</i><div><small>Hesap bakiyesi</small><b class="bv">'+Math.floor(bal)+'</b></div></div><div class="pc"><i>⏱️</i><div><small>Toplam oyun süresi</small><b id="pt">'+fmt(me.playMs)+'</b></div></div></div>';
+  paintAv();$('#acv').onclick=function(){tab='profil';show()};
   $('#bk').onclick=function(){var a=document.createElement('a');
     a.href=URL.createObjectURL(new Blob([JSON.stringify(db)],{type:'application/json'}));
     a.download='oyun-merkezi-yedek.json';a.click()};
@@ -443,11 +466,43 @@ function enter(k){
   });
 }
 
+/* ===== PROFİL: avatar, fotoğraf, çerçeve, isim etiketi ===== */
+var AVS=['🙂','😎','🤠','🥳','😈','🤖','👻','👽','🦊','🐱','🐶','🐼','🦁','🐯','🐸','🐵','🦄','🐲','🦈','🐙','🎩','👑','🚀','🎈'],
+ FRS=[['none','Yok'],['gold','Altın'],['rainbow','Gökkuşağı'],['neon','Neon'],['fire','Ateş'],['emerald','Zümrüt'],['royal','Kraliyet']],
+ TAGS={none:['',''],king:['👑 Kral','linear-gradient(90deg,#ffd77a,#ffb02e)','#3a2500'],gambler:['🎰 Kumarbaz','#e5484d','#fff'],zep:['🎈 Zeplinci','#3b82f6','#fff'],lucky:['🍀 Şanslı','#22c55e','#06280f'],
+  fire:['🔥 Ateşli','linear-gradient(90deg,#ff7a18,#e5484d)','#fff'],diamond:['💎 Elmas','linear-gradient(90deg,#7dd3fc,#c4b5fd)','#0b1b3a'],shark:['🦈 Köpekbalığı','#475569','#fff'],owl:['🌙 Gece Kuşu','#312e81','#e0e7ff'],vip:['⭐ VIP','linear-gradient(90deg,#a855f7,#ec4899)','#fff']};
+function pfd(){var p=(me&&me.pf)||{};return {e:p.e||'🙂',ph:p.ph||'',fr:p.fr||'none',tg:p.tg||'none'}}
+function pfl(){var p=pfd();return {e:p.e,fr:p.fr,tg:p.tg}}
+function avH(p,sz){p=p||{};var f=FRS.some(function(x){return x[0]===p.fr})?p.fr:'none',ph=typeof p.ph==='string'&&p.ph.length<40000&&/^data:image\/jpeg;base64,[A-Za-z0-9+\/=]+$/.test(p.ph)?p.ph:'';
+  return '<span class="av fr-'+f+'" style="--s:'+(sz||40)+'px">'+(ph?'<img src="'+ph+'" alt="">':'<i>'+esc(String(p.e||'🙂').slice(0,4))+'</i>')+'</span>'}
+function tgH(id){if(!id||id==='none'||!Object.prototype.hasOwnProperty.call(TAGS,id))return '';var t=TAGS[id];return '<em class="tg" style="background:'+t[1]+';color:'+t[2]+'">'+t[0]+'</em>'}
+function paintAv(){var a=$('#acv');if(a&&me){var p=pfd();a.innerHTML=avH(p,36)+'<b>'+esc(me.name)+'</b>'+tgH(p.tg)}}
+function profil(){
+  function save(u){me.pf=Object.assign(pfd(),u);me.ts=Date.now();persist();draw();paintAv()}
+  function photo(f){var m=$('#pm'),rd=new FileReader();m.textContent='';
+    rd.onload=function(){var im=new Image();im.onload=function(){var c=document.createElement('canvas');c.width=c.height=96;var x=c.getContext('2d'),q=Math.min(im.width,im.height);
+        x.drawImage(im,(im.width-q)/2,(im.height-q)/2,q,q,0,0,96,96);save({ph:c.toDataURL('image/jpeg',.75)})};
+      im.onerror=function(){m.textContent='Bu dosya okunamadı, başka bir fotoğraf dene.'};im.src=rd.result};
+    rd.readAsDataURL(f)}
+  function draw(){var p=pfd();
+    view.innerHTML='<div class="pfc">'+avH(p,92)+'<div class="pfn"><b>'+esc(me.name)+'</b>'+tgH(p.tg)+'<small>🪙 '+Math.floor(bal)+' · ⏱️ '+fmt(me.playMs)+'</small></div></div>'+
+     '<div class="panel"><h3>Profil fotoğrafı</h3><div class="row"><button id="pph">📷 Fotoğraf seç</button>'+(p.ph?'<button class="ghost" id="prm">Kaldır</button>':'')+'</div><input type="file" id="pfi" accept="image/*" hidden><div class="msg" id="pm"></div></div>'+
+     '<div class="panel"><h3>Avatar</h3><div class="pg">'+AVS.map(function(e){return '<button class="pi'+(!p.ph&&p.e===e?' on':'')+'" data-e="'+e+'">'+e+'</button>'}).join('')+'</div></div>'+
+     '<div class="panel"><h3>Avatar çerçevesi</h3><div class="pg">'+FRS.map(function(f){return '<button class="pi'+(p.fr===f[0]?' on':'')+'" data-f="'+f[0]+'">'+avH({e:p.e,ph:p.ph,fr:f[0]},44)+'<small>'+f[1]+'</small></button>'}).join('')+'</div></div>'+
+     '<div class="panel"><h3>İsim etiketi</h3><div class="pg pgt">'+Object.keys(TAGS).map(function(k){return '<button class="pi'+(p.tg===k?' on':'')+'" data-t="'+k+'">'+(k==='none'?'Etiket yok':tgH(k))+'</button>'}).join('')+'</div></div>';
+    view.querySelectorAll('[data-e]').forEach(function(b){b.onclick=function(){save({e:b.dataset.e,ph:''})}});
+    view.querySelectorAll('[data-f]').forEach(function(b){b.onclick=function(){save({fr:b.dataset.f})}});
+    view.querySelectorAll('[data-t]').forEach(function(b){b.onclick=function(){save({tg:b.dataset.t})}});
+    $('#pph').onclick=function(){$('#pfi').click()};$('#pfi').onchange=function(){if(this.files[0])photo(this.files[0])};
+    var r=$('#prm');if(r)r.onclick=function(){save({ph:''})}}
+  draw()}
 function show(){
   flushPlay();document.body.classList.remove('pl');if(stop){stop();stop=null}
   $('#t-oyun').className='tab'+(tab==='oyun'?' on':'');
   $('#t-kumar').className='tab'+(tab==='kumar'?' on':'');
   $('#t-sosyal').className='tab'+(tab==='sosyal'?' on':'');
+  $('#t-profil').className='tab'+(tab==='profil'?' on':'');
+  if(tab==='profil'){profil();return}
   if(tab==='sosyal'){stop=SOC.view();return}
   var list=tab==='oyun'?NORMAL:KUMAR;
   view.innerHTML='<div class="grid '+(tab==='kumar'?'k':'')+'">'+list.map(function(g){
@@ -464,6 +519,7 @@ function open(id){
   run(0);
 }
 $('#t-oyun').onclick=function(){tab='oyun';show()};
+$('#t-profil').onclick=function(){tab='profil';show()};
 $('#t-kumar').onclick=function(){tab='kumar';show()};
 $('#t-sosyal').onclick=function(){SOC.home();tab='sosyal';show()};
 
@@ -483,7 +539,7 @@ function hm(t){return t?new Date(t).toLocaleTimeString('tr-TR',{hour:'2-digit',m
 function pair(k){return [meKey,k].sort().join('~')}
 function sync(){wr('PUT','presence/'+E(meKey),STS).then(function(){return get('presence/'+E(meKey))}).then(function(t){if(typeof t==='number')off=t-Date.now()})}
 function beat(){if(on&&!document.hidden)wr('PUT','presence/'+E(meKey),STS)}
-function board(){if(!on)return;clearTimeout(bT);bT=setTimeout(function(){if(me)wr('PUT','board/'+E(meKey),{name:me.name,bal:Math.floor(me.bal),ts:STS})},2500)}
+function board(){if(!on)return;clearTimeout(bT);bT=setTimeout(function(){if(me)wr('PUT','board/'+E(meKey),{name:me.name,bal:Math.floor(me.bal),pf:pfd(),ts:STS})},2500)}
 function badge(){var n=Object.keys(ib).filter(function(k){return fr[k]&&unread(k)}).length+Object.keys(rq).length,b=$('#sbdg');if(b){b.hidden=!n;b.textContent=n>9?'9+':n}}
 function toast(t,k,s){var o=$('.s-toast');if(o)o.remove();var d=document.createElement('div');d.className='s-toast';d.setAttribute('role','status');d.textContent=t.slice(0,90);
   d.onclick=function(){d.remove();tab='sosyal';chat=k||null;if(s)sub=s;show()};document.body.appendChild(d);setTimeout(function(){d.remove()},5000)}
@@ -531,9 +587,9 @@ function addView(b){b.innerHTML='<div class="panel"><h2>Arkadaş ekle</h2><div c
 function boardView(b){b.innerHTML='<div class="s-empty">Yükleniyor...</div>';
   get('board').then(function(d){var el=$('#sbody');if(sub!=='lb'||!el)return;
     if(d===undefined){el.innerHTML='<div class="s-empty">Sıralama yüklenemedi.</div>';return}
-    var a=Object.keys(d||{}).map(function(k){return {k:k,n:d[k].name||k,b:+d[k].bal||0}}).sort(function(x,y){return y.b-x.b}).slice(0,25);
+    var a=Object.keys(d||{}).map(function(k){return {k:k,n:d[k].name||k,b:+d[k].bal||0,p:d[k].pf}}).sort(function(x,y){return y.b-x.b}).slice(0,25);
     if(!a.length){el.innerHTML='<div class="s-empty">Henüz kimse yok.</div>';return}
-    el.innerHTML=a.map(function(x,i){return '<div class="s-row n"><span class="s-rk">'+(i<3?['🥇','🥈','🥉'][i]:i+1)+'</span><div class="s-i"><b>'+esc(x.n)+(x.k===meKey?' (sen)':'')+'</b><small>🪙 '+Math.floor(x.b)+'</small></div>'+(x.k===meKey||fr[x.k]?'':'<button data-k="'+esc(x.k)+'">＋ Ekle</button>')+'</div>'}).join('');
+    el.innerHTML=a.map(function(x,i){return '<div class="s-row n"><span class="s-rk">'+(i<3?['🥇','🥈','🥉'][i]:i+1)+'</span>'+avH(x.p,34)+'<div class="s-i"><b>'+esc(x.n)+tgH((x.p||{}).tg)+(x.k===meKey?' (sen)':'')+'</b><small>🪙 '+Math.floor(x.b)+'</small></div>'+(x.k===meKey||fr[x.k]?'':'<button data-k="'+esc(x.k)+'">＋ Ekle</button>')+'</div>'}).join('');
     el.querySelectorAll('button[data-k]').forEach(function(x){x.onclick=function(){x.disabled=true;invite(x.dataset.k).then(function(r){x.textContent=r.ok?'Gönderildi':'Hata'})}})})}
 function drawChat(){var k=chat;
   view.innerHTML='<div class="top"><button class="ghost" id="cb">← Geri</button><h2><span class="s-dot'+(isOn(k)?' on':'')+'" id="cdot"></span> '+esc(nm(k))+'</h2><button class="ghost" id="crm" title="Arkadaşlıktan çıkar">⋯</button></div><div class="s-chat" id="cm"></div><div class="s-send"><input type="text" id="ci" maxlength="300" placeholder="Mesaj yaz..." autocomplete="off"><button id="cs">Gönder</button></div><div class="msg" id="cmsg"></div>';
@@ -1153,13 +1209,13 @@ G.oda=function(el,game){
     var a=Object.keys(d||{}).filter(function(k){return d[k]&&(d[k].g||'zar')===game&&SOC.now()-(d[k].hb||0)<25000});
     b.innerHTML=a.length?a.map(function(k){var n=Object.keys(d[k].pl||{}).length;return '<div class="s-row n"><div class="s-i"><b>'+esc(d[k].name||'Oda')+'</b><small>'+n+'/4 oyuncu</small></div><button data-r="'+esc(k)+'"'+(n>=4?' disabled':'')+'>'+(n>=4?'Dolu':'Katıl')+'</button></div>'}).join(''):'<div class="s-empty">Açık oda yok. İlk odayı sen kur!</div>';
     b.querySelectorAll('[data-r]').forEach(function(x){x.onclick=function(){x.disabled=true;join(x.dataset.r)}})})}
-  function make(){var id=Math.random().toString(36).slice(2,8),p={};p[meKey]={n:me.name,hb:ST,j:ST};
+  function make(){var id=Math.random().toString(36).slice(2,8),p={};p[meKey]={n:me.name,hb:ST,j:ST,pf:pfl()};
     api('PUT','rooms/'+id,{name:me.name+' odası',g:game,host:meKey,hb:ST,st:'bet',rd:1,bs:ST,pl:p}).then(function(ok){ok===undefined?lobby('Oda kurulamadı.'):enter(id)})}
   function join(id){api('GET','rooms/'+id).then(function(r){
     if(!r)return lobby('Oda bulunamadı.');
     if((r.g||'zar')!==game)return lobby('Bu oda başka bir oyun için.');
     if(Object.keys(r.pl||{}).length>=4&&!(r.pl||{})[meKey])return lobby('Oda dolu (4/4).');
-    api('PUT','rooms/'+id+'/pl/'+E(meKey),{n:me.name,hb:ST,j:ST}).then(function(ok){
+    api('PUT','rooms/'+id+'/pl/'+E(meKey),{n:me.name,hb:ST,j:ST,pf:pfl()}).then(function(ok){
       if(ok===undefined)return lobby('Katılınamadı.');
       api('GET','rooms/'+id+'/pl').then(function(p){p=p||{};var o=Object.keys(p).sort(function(a,b){return ((p[a].j||0)-(p[b].j||0))||(a<b?-1:1)});
         if(o.indexOf(meKey)>=4){api('DELETE','rooms/'+id+'/pl/'+E(meKey));return lobby('Oda doldu (4/4).')}
@@ -1210,7 +1266,7 @@ G.oda=function(el,game){
       if(zp){zsync(r);drawZ(r)}else draw()})}
   function rows(r,txt){var pl=r.pl||{},ks=Object.keys(pl).sort(function(a,b){return (pl[a].j||0)-(pl[b].j||0)});
     return ks.map(function(k){var p=pl[k],s=txt(p,p.r===r.rd,Math.floor(+p.b||0));
-      return '<div class="s-row n"><span class="s-dot'+(p.r===r.rd?' on':'')+'"></span><div class="s-i"><b>'+esc(p.n||k)+(k===r.host?' 👑':'')+(k===meKey?' (sen)':'')+'</b><small>'+s+'</small></div></div>'}).join('')}
+      return '<div class="s-row n">'+avH(p.pf,32)+'<div class="s-i"><b>'+esc(p.n||k)+tgH((p.pf||{}).tg)+(k===r.host?' 👑':'')+(k===meKey?' (sen)':'')+'</b><small>'+s+'</small></div></div>'}).join('')}
   function head(r){return '<b>'+esc(r.name||'Oda')+'</b> · '+Object.keys(r.pl||{}).length+'/4 oyuncu · Tur '+r.rd}
   function drawZ(r){if(!$('#pls'))return;var left=Math.max(0,Math.ceil((WIN-(SOC.now()-(r.bs||0)))/1000));
     $('#rh').innerHTML=head(r)+' · '+(r.st==='bet'?'Bahis: '+left+' sn':r.st==='run'?'Uçuşta 🎈':'Patladı '+(+(r.h||{})[r.rd]||0).toFixed(2)+'x');
