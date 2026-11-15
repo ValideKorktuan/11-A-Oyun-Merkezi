@@ -516,15 +516,12 @@ function loginView(msg){
 function enter(k){
   hold=!!CLOUD_URL;meKey=k;me=db.users[k];bal=me.bal;db.last=k;persist();
   $('#tabs').hidden=false;
-  $('#acct').innerHTML='<div class="acct"><span style="display:inline-flex;align-items:center;gap:8px"><span id="acv" style="display:inline-flex;align-items:center;gap:8px;cursor:pointer"></span> <small id="cl" style="color:var(--mut)"></small></span><button class="ghost" id="bk">Yedek al</button><button class="ghost" id="kd">Kodu kopyala</button><button class="ghost" id="lo2">Çıkış</button></div>'+
+  $('#acct').innerHTML='<div class="acct"><span style="display:inline-flex;align-items:center;gap:8px"><span id="acv" style="display:inline-flex;align-items:center;gap:8px;cursor:pointer"></span> <small id="cl" style="color:var(--mut)"></small></span><button class="ghost" id="bk">Yedek al</button><button class="ghost" id="lo2">Çıkış</button></div>'+
    '<div class="pbar"><div class="pc"><i>🪙</i><div><small>Hesap bakiyesi</small><b class="bv">'+Math.floor(bal)+'</b></div></div><div class="pc"><i>⏱️</i><div><small>Toplam oyun süresi</small><b id="pt">'+fmt(me.playMs)+'</b></div></div></div>';
   paintAv();$('#acv').onclick=function(){tab='profil';show()};
   $('#bk').onclick=function(){var a=document.createElement('a');
     a.href=URL.createObjectURL(new Blob([JSON.stringify(db)],{type:'application/json'}));
     a.download='oyun-merkezi-yedek.json';a.click()};
-  $('#kd').onclick=function(){var c=toCode(),b=$('#kd');
-    function ok(){b.textContent='Kopyalandı ✓';setTimeout(function(){b.textContent='Kodu kopyala'},1500)}
-    try{navigator.clipboard.writeText(c).then(ok,function(){prompt('Kodu kopyala:',c)})}catch(e){prompt('Kodu kopyala:',c)}};
   $('#lo2').onclick=function(){flushPlay();SOC&&SOC.stop();db.last=null;me=null;meKey=null;persist();loginView()};
   Promise.race([fbapi('GET','bans/'+EC(k)),wait(1500,undefined)]).then(function(b){
     if(b&&b.t==='del'){delAcct(k);return 'del'}
