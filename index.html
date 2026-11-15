@@ -352,7 +352,8 @@ var NORMAL=[
 var KUMAR=[
  {id:'zeplin',i:'🎈',n:'Zeplin',d:'Patlamadan önce çek'},
  {id:'yazitura',i:'🪙',n:'Yazı Tura',d:'Kazanç 1.94x'},
- {id:'zar',i:'🎲',n:'Zar',d:'Kendi oranını seç'}
+ {id:'zar',i:'🎲',n:'Zar',d:'Kendi oranını seç'},
+ {id:'oda',i:'🏠',n:'Online Oda',d:'En fazla 4 kişi'}
 ];
 
 function mergeIn(d){var n=0;if(!d||!d.users)return 0;
@@ -528,7 +529,7 @@ function stop(){on=false;clearInterval(tT);clearInterval(hT);clearInterval(cT);c
 function start(){stop();if(!DB||!meKey)return;on=true;ls();sync();board();tT=setInterval(tick,15000);hT=setInterval(beat,30000);document.addEventListener('visibilitychange',vis);tick()}
 function open_(){if(!DB){view.innerHTML='<div class="panel"><div class="s-empty">Sosyal özellikler için sunucu bağlantısı gerekli.</div></div>';return null}
   if(chat)drawChat();else drawMain();tick();return function(){clearInterval(cT)}}
-return {start:start,stop:stop,view:open_,board:board,home:function(){chat=null}}})();
+return {start:start,stop:stop,view:open_,board:board,now:now,home:function(){chat=null}}})();
 
 var MAXB=2500;
 function betUI(extra){return '<div class="panel"><div class="row"><label>Bahis (en çok '+MAXB+')<input id="bet" type="number" min="1" max="'+MAXB+'" value="50" inputmode="numeric"></label>'+(extra||'')+'</div><div class="row bq"><button type="button" class="ghost bmax">Max</button><button type="button" class="ghost bclr">Temizle</button></div><div class="msg" id="msg"></div></div>'}
@@ -1092,6 +1093,67 @@ G.xox=function(el){
   function init(){b=['','','','','','','','',''];over=0;wline=null;$('#msg').textContent='Sen X, bilgisayar O.';render()}
   $('#rs').onclick=init;init();
   return function(){clearTimeout(tm)};
+};
+
+/* ===== ONLINE ODA: en fazla 4 kişi, ortak zar (Firebase REST) ===== */
+G.oda=function(el){
+  var U=CLOUD_URL.replace(/\/$/,''),E=encodeURIComponent,ST={'.sv':'timestamp'},rid=null,R=null,t=0,mine=null,nx=0;
+  function api(m,p,b){return fetch(U+'/'+p+'.json',{method:m,body:b===undefined?undefined:JSON.stringify(b)}).then(function(r){return r.ok?r.json():undefined}).catch(function(){return undefined})}
+  function lobby(msg){clearInterval(t);rid=null;R=null;nx=0;
+    el.innerHTML='<div class="panel"><h2>Online odalar</h2><div class="msg">'+(msg||'En fazla 4 kişilik odalar. Herkes aynı zarı görür.')+'</div><div class="row"><button id="mk">Oda kur</button><button class="ghost" id="rf">Yenile</button></div></div><div id="rl"></div>';
+    $('#mk').onclick=function(){this.disabled=true;make()};$('#rf').onclick=list;list();t=setInterval(list,5000)}
+  function list(){api('GET','rooms').then(function(d){var b=$('#rl');if(!b||rid)return;if(d===undefined){b.innerHTML='<div class="s-empty">Odalar yüklenemedi.</div>';return}
+    var a=Object.keys(d||{}).filter(function(k){return d[k]&&SOC.now()-(d[k].hb||0)<25000});
+    b.innerHTML=a.length?a.map(function(k){var n=Object.keys(d[k].pl||{}).length;return '<div class="s-row n"><div class="s-i"><b>'+esc(d[k].name||'Oda')+'</b><small>'+n+'/4 oyuncu</small></div><button data-r="'+esc(k)+'"'+(n>=4?' disabled':'')+'>'+(n>=4?'Dolu':'Katıl')+'</button></div>'}).join(''):'<div class="s-empty">Açık oda yok. İlk odayı sen kur!</div>';
+    b.querySelectorAll('[data-r]').forEach(function(x){x.onclick=function(){x.disabled=true;join(x.dataset.r)}})})}
+  function make(){var id=Math.random().toString(36).slice(2,8),p={};p[meKey]={n:me.name,hb:ST,j:ST};
+    api('PUT','rooms/'+id,{name:me.name+' odası',host:meKey,hb:ST,st:'bet',rd:1,pl:p}).then(function(ok){ok===undefined?lobby('Oda kurulamadı.'):enter(id)})}
+  function join(id){api('GET','rooms/'+id).then(function(r){
+    if(!r)return lobby('Oda bulunamadı.');
+    if(Object.keys(r.pl||{}).length>=4&&!(r.pl||{})[meKey])return lobby('Oda dolu (4/4).');
+    api('PUT','rooms/'+id+'/pl/'+E(meKey),{n:me.name,hb:ST,j:ST}).then(function(ok){
+      if(ok===undefined)return lobby('Katılınamadı.');
+      api('GET','rooms/'+id+'/pl').then(function(p){p=p||{};var o=Object.keys(p).sort(function(a,b){return ((p[a].j||0)-(p[b].j||0))||(a<b?-1:1)});
+        if(o.indexOf(meKey)>=4){api('DELETE','rooms/'+id+'/pl/'+E(meKey));return lobby('Oda doldu (4/4).')}
+        enter(id)})})})}
+  function enter(id){clearInterval(t);rid=id;R=null;mine=null;nx=0;
+    el.innerHTML='<div class="panel"><div id="rh"></div><div class="big" id="dc">🎲</div><div id="pls"></div></div><div id="bz" hidden>'+betUI()+'<div class="row"><button id="lo">Düşük (1-3)</button><button id="hi">Yüksek (4-6)</button></div><div class="note">Kazanırsan bahsin 1.94 katı geri gelir.</div></div><div class="row"><button class="ghost" id="lv">Odadan çık</button><button id="go" class="out" hidden>Zarı at</button></div>';
+    $('#lo').onclick=function(){put('l')};$('#hi').onclick=function(){put('h')};
+    $('#lv').onclick=function(){leave();lobby()};$('#go').onclick=function(){if(R&&R.st==='bet'&&!nx){nx=1;roll()}};
+    t=setInterval(poll,2000);poll()}
+  function put(p){if(!R||R.st!=='bet'||(mine&&mine.rd===R.rd))return;var b=getBet();if(!b)return;var d=R.rd;
+    setBal(bal-b);mine={rd:d,b:b,p:p};
+    api('PATCH','rooms/'+rid+'/pl/'+E(meKey),{r:d,b:b,p:p}).then(function(ok){if(ok===undefined&&mine&&mine.rd===d&&!mine.s){setBal(bal+b);mine=null;var m=$('#msg');if(m)m.textContent='Bahis gönderilemedi.'}})}
+  function settle(r){if(!mine||mine.s)return;var x=(r.h||{})[mine.rd];if(!x)return;mine.s=1;if((x>3?'h':'l')===mine.p){setBal(bal+Math.floor(mine.b*1.94));burst()}}
+  function refund(){if(mine&&!mine.s)setBal(bal+mine.b);mine=null}
+  function roll(){var id=rid,d=R.rd,u={st:'res'};u['h/'+d]=ri(6)+1;
+    api('PATCH','rooms/'+id,u).then(function(){setTimeout(function(){if(rid===id)api('PATCH','rooms/'+id,{st:'bet',rd:d+1}).then(function(){nx=0})},6000)})}
+  function host(r,pl,n){var ks=Object.keys(pl);
+    ks.forEach(function(k){if(k!==meKey&&n-(pl[k].hb||0)>40000)api('DELETE','rooms/'+rid+'/pl/'+E(k))});
+    var live=ks.filter(function(k){return n-(pl[k].hb||0)<=15000}),bt=live.filter(function(k){return pl[k].r===r.rd});
+    if(r.st==='bet'&&bt.length&&bt.length===live.length&&!nx){nx=1;setTimeout(function(){if(rid&&R&&R.st==='bet')roll();else nx=0},1200)}}
+  function poll(){if(!rid||document.hidden)return;var id=rid;
+    api('GET','rooms/'+id).then(function(r){if(rid!==id||r===undefined)return;
+      if(!r){refund();return lobby('Oda kapatıldı.')}
+      var pl=r.pl||{},n=SOC.now();R=r;settle(r);
+      if(!pl[meKey]){refund();return lobby('Odadan çıkarıldın.')}
+      if(r.host!==meKey&&n-(r.hb||0)>30000){api('DELETE','rooms/'+id);refund();return lobby('Oda sahibi ayrıldı.')}
+      api('PATCH','rooms/'+id+'/pl/'+E(meKey),{hb:ST});
+      if(r.host===meKey){api('PATCH','rooms/'+id,{hb:ST});host(r,pl,n)}
+      draw()})}
+  function draw(){var r=R;if(!r||!$('#pls'))return;var pl=r.pl||{},ks=Object.keys(pl).sort(function(a,b){return (pl[a].j||0)-(pl[b].j||0)}),
+    res=r.st==='res'?(r.h||{})[r.rd]:0,bt=ks.filter(function(k){return pl[k].r===r.rd}).length;
+    $('#rh').innerHTML='<b>'+esc(r.name||'Oda')+'</b> · '+ks.length+'/4 oyuncu · Tur '+r.rd;
+    $('#dc').textContent=res||'🎲';
+    $('#pls').innerHTML=ks.map(function(k){var p=pl[k],has=p.r===r.rd,b=Math.floor(+p.b||0),w=res&&(res>3?'h':'l')===p.p,
+      s=!has?'Bahis bekleniyor':res?(p.p==='h'?'Yüksek':'Düşük')+' · '+b+' → '+(w?'+'+Math.floor(b*1.94)+' 🎉':'-'+b):'Bahis hazır ✓';
+      return '<div class="s-row n"><span class="s-dot'+(has?' on':'')+'"></span><div class="s-i"><b>'+esc(p.n||k)+(k===r.host?' 👑':'')+(k===meKey?' (sen)':'')+'</b><small>'+s+'</small></div></div>'}).join('');
+    $('#bz').hidden=!(r.st==='bet'&&!(mine&&mine.rd===r.rd));
+    $('#go').hidden=!(r.host===meKey&&r.st==='bet'&&bt>0)}
+  function leave(){var id=rid;if(!id)return;rid=null;clearInterval(t);if(R)settle(R);refund();
+    api('DELETE',R&&R.host===meKey?'rooms/'+id:'rooms/'+id+'/pl/'+E(meKey));R=null}
+  lobby();
+  return function(){leave();clearInterval(t)};
 };
 
 boot();
