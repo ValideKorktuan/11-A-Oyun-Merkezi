@@ -356,7 +356,7 @@ var view=$('#view'),stop=null,tab='oyun';
 /* BULUT AYARI: Firebase Realtime Database adresini buraya yaz (örn. 'https://proje-adi-default-rtdb.firebaseio.com').
    Boş bırakırsan hesaplar sadece bu tarayıcıda saklanır. Doluysa hesaplar sunucuda tutulur ve dosya adı/cihaz değişse de çalışır. */
 var CLOUD_URL='https://a-oyun-merkezi-default-rtdb.firebaseio.com';
-var KEY='oyunmerkezi:v1',START=1000,VER='2.7',db,me=null,meKey=null,bal=0;
+var KEY='oyunmerkezi:v1',START=1000,VER='2.8',db,me=null,meKey=null,bal=0;
 /* Hesaplar tek bir kayıt altında tutulur. Güncellemede bu anahtar değişmediği ve
    load() eksik alanları tamamladığı için hesaplar ve bakiyeler korunur. */
 function norm(d){
@@ -486,7 +486,7 @@ function loginView(msg){
     hash(c.p).then(function(h){cloudGet(c.k).then(function(cu){
       if(cu){$('#lmsg').textContent='Bu ad alınmış.';return}
       var start=START;if(db.legacy>=0){start=db.legacy;delete db.legacy}
-      db.users[c.k]={name:c.n,h:h,bal:start,playMs:0,created:Date.now(),ts:Date.now(),stats:{}};persist();enter(c.k)})})};
+      db.users[c.k]={name:c.n,h:h,bal:start,playMs:0,created:Date.now(),ts:Date.now(),stats:{}};persist();fbapi('DELETE','bans/'+EC(c.k)).then(function(){enter(c.k)})})})};
   function done(n){var u=Object.keys(db.users);
     if(n&&db.last&&db.users[db.last])enter(db.last);else if(n&&u.length===1)enter(u[0]);
     else loginView(n?n+' hesap yüklendi. Şimdi giriş yapabilirsin.':'Yeni hesap bulunamadı.')}
@@ -508,12 +508,15 @@ function enter(k){
     function ok(){b.textContent='Kopyalandı ✓';setTimeout(function(){b.textContent='Kodu kopyala'},1500)}
     try{navigator.clipboard.writeText(c).then(ok,function(){prompt('Kodu kopyala:',c)})}catch(e){prompt('Kodu kopyala:',c)}};
   $('#lo2').onclick=function(){flushPlay();SOC&&SOC.stop();db.last=null;me=null;meKey=null;persist();loginView()};
-  Promise.race([cloudGet(k),wait(1500,false)]).then(function(cu){
+  Promise.race([fbapi('GET','bans/'+EC(k)),wait(1500,undefined)]).then(function(b){
+    if(b&&b.t==='del'){delAcct(k);return 'del'}
+    return Promise.race([cloudGet(k),wait(1500,false)])}).then(function(cu){
+    if(cu==='del')return;
     hold=false;
     if(cu&&cu.h===me.h)me.playMs=Math.max(me.playMs||0,cu.playMs||0);
     if(cu&&cu.h===me.h&&(cu.ts||0)>(me.ts||0)){me.bal=cu.bal;me.ts=cu.ts;bal=me.bal;persist()}else cloudPush();
     paint();mig();grantSync();
-    if(meKey===k){SOC&&SOC.start();show()}
+    if(meKey===k){SOC&&SOC.start();show();banChk()}
   });
 }
 
@@ -535,6 +538,29 @@ var PT={lucky:5000,zep:10000,gambler:15000,fire:20000,owl:25000,shark:35000,king
  PF={emerald:5000,neon:10000,gold:15000,fire:20000,rainbow:30000,royal:50000},
  ADMT=['vip','diamond'],ADMINS=['admin','validekorkutan'],/* yönetici hesap(lar)ın kullanıcı adı (küçük harf) */ ps='me',EC=encodeURIComponent;
 function fbapi(m,p,b){return fetch(CLOUD_URL.replace(/\/$/,'')+'/'+p+'.json',{method:m,body:b===undefined?undefined:JSON.stringify(b)}).then(function(r){return r.ok?r.json():undefined}).catch(function(){return undefined})}
+
+/* ===== MODERASYON: ban, timeout, hesap silme (bans/<kullanıcı>) ===== */
+var banT=0;
+function durTxt(ms){var s=Math.max(0,Math.ceil(ms/1000)),d=Math.floor(s/86400),h=Math.floor(s%86400/3600),m=Math.floor(s%3600/60);s=s%60;
+  return d?d+' gün '+h+' sa':h?h+' sa '+m+' dk':m?m+' dk '+s+' sn':s+' sn'}
+function hideBan(){clearInterval(banT);var o=$('#ban');if(o)o.remove()}
+function logoutNow(){flushPlay();SOC&&SOC.stop();db.last=null;me=null;meKey=null;persist();hideBan();loginView()}
+function showBan(b){SOC&&SOC.stop();if(stop){stop();stop=null}
+  var o=$('#ban');if(!o){o=document.createElement('div');o.id='ban';
+    o.style.cssText='position:fixed;inset:0;z-index:9999;background:rgba(8,12,36,.97);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center;padding:24px;color:#fdf3e3';
+    document.body.appendChild(o)}
+  var to=b.t==='to',why=b.why?'<div style="opacity:.85">Sebep: '+esc(b.why)+'</div>':'';
+  o.innerHTML='<div style="font-size:64px">'+(to?'⏳':'⛔')+'</div><h2 style="margin:0">'+(to?'Geçici olarak engellendin':'Hesabın banlandı')+'</h2>'+why+
+    (to?'<div style="font-size:30px;font-weight:bold;color:#ffc857" id="banr"></div><div style="opacity:.8">Süre dolunca otomatik açılır.</div>':'<div style="opacity:.8">Bir hata olduğunu düşünüyorsan yöneticiyle konuş.</div>')+
+    '<button id="banx" class="ghost">Çıkış yap</button>';
+  $('#banx').onclick=logoutNow;clearInterval(banT);
+  if(to){var up=function(){var l=(+b.until||0)-SOC.now(),r=$('#banr');if(l<=0){hideBan();banChk();return}if(r)r.textContent=durTxt(l)};up();banT=setInterval(up,1000)}}
+function delAcct(k){hold=false;SOC&&SOC.stop();var q=EC(k);fbapi('DELETE','users/'+q);fbapi('DELETE','board/'+q);
+  delete db.users[k];db.last=null;me=null;meKey=null;persist();hideBan();loginView('Hesabın yönetici tarafından silindi.')}
+function banChk(){if(!me||!meKey||!CLOUD_URL||isAdm())return;var k=meKey;
+  fbapi('GET','bans/'+EC(k)).then(function(b){if(meKey!==k||b===undefined)return;
+    if(b&&b.t==='del')return delAcct(k);
+    var act=b&&(b.t==='ban'||(b.t==='to'&&(+b.until||0)>SOC.now()));act?showBan(b):hideBan()})}
 function isAdm(){var k=String(meKey||'').toLowerCase(),n=String((me&&me.name)||'').trim().toLowerCase();return ADMINS.indexOf(k)>=0||ADMINS.indexOf(n)>=0}
 function mig(){if(!me)return;ownO();if(!me.mkt){me.mkt=1;var p=me.pf||{};if(PT[p.tg])me.own.t[p.tg]=1;if(PF[p.fr])me.own.f[p.fr]=1;persist()}paintAv()}
 function grantSync(){if(!me||!CLOUD_URL)return;fbapi('GET','grants/'+EC(meKey)).then(function(g){if(g===undefined||!me)return;g=g||{};var o=ownO(),ch=0;
@@ -573,7 +599,8 @@ function profil(mk){
   function admV(){var B=$('#pb');B.innerHTML='<div class="s-empty">Yükleniyor...</div>';
     Promise.all([fbapi('GET','board'),fbapi('GET','grants')]).then(function(a){var d=a[0]||{},g=a[1]||{};if(a[0]===undefined||ps!=='ad'||!$('#pb')){if(a[0]===undefined)B.innerHTML='<div class="s-empty">Liste yüklenemedi.</div>';return}
       B.innerHTML='<div class="msg">VIP ve Elmas etiketlerini sadece sen verebilirsin. Oyuncu bir sonraki açılışında etiketi alır.</div>'+Object.keys(d).map(function(k){var gk=g[k]||{};
-        return '<div class="s-row n">'+avH(d[k].pf,32)+'<div class="s-i"><b>'+esc(d[k].name||k)+'</b></div>'+ADMT.map(function(t){return '<button class="'+(gk[t]?'out':'ghost')+'" data-g="'+esc(k)+'|'+t+'">'+TAGS[t][0].split(' ')[0]+(gk[t]?' ✓':'')+'</button>'}).join('')+'</div>'}).join('');
+        return '<div class="s-row n">'+avH(d[k].pf,32)+'<div class="s-i"><b>'+esc(d[k].name||k)+'</b></div>'+ADMT.map(function(t){return '<button class="'+(gk[t]?'out':'ghost')+'" data-g="'+esc(k)+'|'+t+'">'+TAGS[t][0].split(' ')[0]+(gk[t]?' ✓':'')+'</button>'}).join('')+'<button class="ghost" data-pf="'+esc(k)+'" title="Profil / moderasyon">👤</button></div>'}).join('');
+      B.querySelectorAll('[data-pf]').forEach(function(x){x.onclick=function(){tab='sosyal';SOC.home();show();SOC.user(x.dataset.pf,'lb')}});
       B.querySelectorAll('[data-g]').forEach(function(x){x.onclick=function(){var q=x.dataset.g.split('|'),has=!!(g[q[0]]||{})[q[1]];x.disabled=true;fbapi(has?'DELETE':'PUT','grants/'+EC(q[0])+'/'+q[1],has?undefined:1).then(admV)}})})}
   function draw(){var p=pfd(),sub='';
     if(mk)ps='mk';else if(ps==='mk')ps='me';
@@ -662,7 +689,7 @@ function tagsOf(p,g){p=p||{};g=g||{};var h=tgH(p.tg);ADMT.forEach(function(t){if
 function userView(k,sb){
   view.innerHTML='<div class="top"><button class="ghost" id="ub">← Geri</button><h2>Oyuncu profili</h2></div><div id="ubody"><div class="s-empty">Yükleniyor...</div></div>';
   $('#ub').onclick=function(){sub=sb||'lb';drawMain()};
-  Promise.all([get('board'),get('grants/'+E(k)),get('presence/'+E(k))]).then(function(a){var el=$('#ubody');if(!el||!$('#ub'))return;
+  Promise.all([get('board'),get('grants/'+E(k)),get('presence/'+E(k)),get('bans/'+E(k))]).then(function(a){var el=$('#ubody');if(!el||!$('#ub'))return;
     if(a[0]===undefined){el.innerHTML='<div class="s-empty">Profil yüklenemedi.</div>';return}
     var d=a[0]||{},u=d[k],g=a[1]||{},t=a[2];
     if(!u){el.innerHTML='<div class="s-empty">Bu oyuncunun profili henüz yok.<br>(Oyuncu bir kez giriş yapınca görünür.)</div>';return}
@@ -672,7 +699,26 @@ function userView(k,sb){
     h+='<div class="panel"><h3>İstatistikler</h3><div class="s-i"><small>🏆 Sıralama: <b>#'+rk+'</b> / '+all.length+'</small><br><small>🪙 Bakiye: <b>'+Math.floor(+u.bal||0).toLocaleString('tr-TR')+'</b></small>'+(u.pm?'<br><small>⏱️ Oynama süresi: <b>'+fmt(u.pm)+'</b></small>':'')+'</div></div>';
     if(!me2)h+='<div class="row">'+(fr[k]?'<button id="umsg">💬 Mesaj gönder</button>':'<button id="uadd">＋ Arkadaş ekle</button>')+'</div><div class="msg" id="umm"></div>';
     if(isAdm()&&!me2)h+='<div class="panel"><h3>🛠 Etiket ver</h3><div class="row">'+ADMT.map(function(x){return '<button class="'+(g[x]?'out':'ghost')+'" data-g="'+x+'">'+TAGS[x][0]+(g[x]?' ✓':'')+'</button>'}).join('')+'</div></div>';
+    if(isAdm()&&!me2&&ADMINS.indexOf(k)<0){var bn=a[3],ac=bn&&(bn.t==='ban'||(bn.t==='to'&&(+bn.until||0)>now())),
+        stt=!ac?'✅ Normal':bn.t==='ban'?'⛔ Banlı':'⏳ Timeout · kalan '+durTxt((+bn.until||0)-now());
+      h+='<div class="panel"><h3>🛡 Moderasyon</h3><div class="msg">Durum: '+stt+(ac&&bn.why?' · '+esc(bn.why):'')+'</div><div class="row">'+
+        [['10 dk',6e5],['1 sa',36e5],['1 gün',864e5],['7 gün',6048e5]].map(function(q){return '<button class="ghost" data-to="'+q[1]+'">⏳ '+q[0]+'</button>'}).join('')+'</div><div class="row">'+
+        '<button data-m="ban">⛔ Banla</button>'+(ac?'<button class="out" data-m="un">✅ Kaldır</button>':'')+'<button class="ghost" data-m="del">🗑 Hesabı sil</button></div></div>'}
     el.innerHTML=h;
+    function mod(o){var w=prompt('Sebep (isteğe bağlı):','');if(w===null)return;o.why=(w||'').slice(0,80);o.ts=now();o.by=meKey;
+      fbapi('PUT','bans/'+E(k),o).then(function(r){if(r===undefined)alert('Kaydedilemedi. Firebase kurallarına "bans" bölümünü ekledin mi?');userView(k,sb)})}
+    el.querySelectorAll('[data-to]').forEach(function(x){x.onclick=function(){mod({t:'to',until:now()+(+x.dataset.to)})}});
+    el.querySelectorAll('[data-m]').forEach(function(x){x.onclick=function(){var m=x.dataset.m;
+      if(m==='ban')return mod({t:'ban'});
+      if(m==='un')return fbapi('DELETE','bans/'+E(k)).then(function(){userView(k,sb)});
+      if(!confirm((u.name||k)+' hesabı KALICI olarak silinsin mi? Geri alınamaz.'))return;
+      x.disabled=true;var q=E(k);
+      fbapi('PUT','bans/'+q,{t:'del',ts:now(),by:meKey}).then(function(r){if(r===undefined){alert('Silinemedi. Firebase kurallarına "bans" bölümünü ekledin mi?');userView(k,sb);return}
+        return fbapi('GET','friends/'+q).then(function(f){var ops=['users','board','grants','presence','friends','requests','inbox'].map(function(pa){return fbapi('DELETE',pa+'/'+q)});
+          Object.keys(f||{}).forEach(function(x2){ops.push(fbapi('DELETE','friends/'+E(x2)+'/'+q));ops.push(fbapi('DELETE','inbox/'+E(x2)+'/'+q))});
+          return Promise.all(ops)}).then(function(res){
+            if(res[0]===undefined)alert('Hesap kaydı silinemedi. Firebase kurallarında users bölümünü güncelledin mi?');
+            else alert('Hesap silindi.');sub=sb||'lb';drawMain()})})}});
     var m1=$('#umsg');if(m1)m1.onclick=function(){chat=k;msgs=[];lastKey='';drawChat()};
     var m2=$('#uadd');if(m2)m2.onclick=function(){m2.disabled=true;invite(k).then(function(r){var q=$('#umm');if(q)q.textContent=r.msg;m2.textContent=r.ok?'Gönderildi':'Tekrar dene';m2.disabled=!!r.ok})};
     el.querySelectorAll('[data-g]').forEach(function(x){x.onclick=function(){var tg=x.dataset.g,has=!!g[tg];x.disabled=true;fbapi(has?'DELETE':'PUT','grants/'+E(k)+'/'+tg,has?undefined:1).then(function(){userView(k,sb)})}})})}
@@ -725,7 +771,7 @@ function stop(){on=false;clearInterval(tT);clearInterval(hT);clearInterval(cT);c
 function start(){stop();if(!DB||!meKey)return;on=true;ls();sync();board();tT=setInterval(tick,15000);hT=setInterval(beat,30000);document.addEventListener('visibilitychange',vis);tick()}
 function open_(){if(!DB){view.innerHTML='<div class="panel"><div class="s-empty">Sosyal özellikler için sunucu bağlantısı gerekli.</div></div>';return null}
   if(chat)drawChat();else drawMain();tick();return function(){clearInterval(cT)}}
-return {start:start,stop:stop,view:open_,board:board,now:now,home:function(){chat=null}}})();
+return {start:start,stop:stop,view:open_,board:board,now:now,user:userView,home:function(){chat=null}}})();
 
 var MAXB=2500;
 function betUI(extra){return '<div class="panel"><div class="row"><label>Bahis (en çok '+MAXB+')<input id="bet" type="number" min="1" max="'+MAXB+'" value="50" inputmode="numeric"></label>'+(extra||'')+'</div><div class="row bq"><button type="button" class="ghost bmax">Max</button><button type="button" class="ghost bclr">Temizle</button></div><div class="msg" id="msg"></div></div>'}
@@ -1481,8 +1527,8 @@ function chkVer(){if(location.protocol==='file:')return;
     var d=document.createElement('div');d.id='upd';d.setAttribute('role','status');d.textContent='🔄 Yeni sürüm var - güncellemek için dokun';
     d.style.cssText='position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:70;max-width:92vw;background:#ffc857;color:#1d2b53;padding:11px 16px;border-radius:12px;font-weight:bold;cursor:pointer;box-shadow:0 6px 20px rgba(0,0,0,.4);text-align:center';
     d.onclick=bust;document.body.appendChild(d)}).catch(function(){})}
-setTimeout(chkVer,2000);setInterval(chkVer,30000);setInterval(function(){if(me)grantSync()},60000);
-document.addEventListener('visibilitychange',function(){if(!document.hidden)chkVer()});
+setTimeout(chkVer,2000);setInterval(chkVer,30000);setInterval(banChk,15000);setInterval(function(){if(me)grantSync()},60000);
+document.addEventListener('visibilitychange',function(){if(!document.hidden){chkVer();banChk()}});
 boot();
 })();
 </script>
