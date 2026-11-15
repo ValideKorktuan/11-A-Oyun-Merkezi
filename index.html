@@ -337,6 +337,26 @@ h1.logo svg{animation:none;filter:drop-shadow(0 5px 12px rgba(232,131,107,.5))}
 .hud span{transition:transform .2s}
 .mem button.done{animation:donep .4s}
 .ttt button:disabled{opacity:1}
+
+.ot{width:34px;height:48px;padding:0;border-radius:7px;background:linear-gradient(#fffaf0,#e6d8bb);color:var(--c);font-size:19px;font-weight:800;position:relative;display:inline-flex;align-items:center;justify-content:center;box-shadow:0 3px 0 #a8946e;font-family:system-ui,sans-serif;flex:none;letter-spacing:0}
+.ot i{position:absolute;bottom:5px;width:7px;height:7px;border-radius:50%;background:var(--c)}
+.ot.ow{outline:2px solid #ffc857;box-shadow:0 0 10px #ffc857,0 3px 0 #a8946e}
+.ot.sel,.ot.sel:hover:not(:disabled){transform:translateY(-10px)!important;box-shadow:0 10px 14px rgba(0,0,0,.45)}
+.ot.sm{width:25px;height:35px;font-size:14px;border-radius:5px}.ot.sm i{width:5px;height:5px;bottom:3px}
+.ot.em{background:rgba(255,255,255,.08);box-shadow:none}
+.okh{display:flex;flex-wrap:wrap;gap:8px 14px;justify-content:center;padding:14px 0 6px;min-height:70px}
+.okg{display:inline-flex;gap:3px;padding:4px;border-radius:10px;background:rgba(255,255,255,.07)}
+.okpb{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:8px}
+.okpl{display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 3px;border-radius:12px;background:rgba(0,0,0,.22);border:1px solid var(--line);min-width:0;text-align:center}
+.okpl b{font-size:12px;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.okpl small{font-size:10.5px;color:var(--mut)}
+.okpl.on{border-color:var(--acc);box-shadow:0 0 12px rgba(255,200,87,.45)}
+.okc{display:flex;gap:14px;align-items:flex-end;justify-content:center}.okc>div{display:flex;flex-direction:column;align-items:center;gap:4px}
+.okc small,.okd small{font-size:11px;color:var(--mut)}.okpile b{font-size:26px}
+.okds{display:flex;gap:8px;justify-content:center;margin-top:12px}.okd{display:flex;flex-direction:column;align-items:center;gap:3px;padding:5px 8px;border-radius:10px;background:rgba(0,0,0,.18)}
+.okd.hl{outline:2px dashed var(--acc)}
+.okt{display:flex;flex-wrap:wrap;gap:8px;max-height:210px;overflow-y:auto}.okm{display:inline-flex;align-items:center;gap:2px;padding:4px;border-radius:9px;background:rgba(255,255,255,.07)}.okm small{font-size:10px;color:var(--mut);margin-left:4px}
+.okb{flex-wrap:wrap;gap:6px}.okb button{flex:1 1 28%;min-width:0;padding:10px 4px;font-size:14px}
+.oklg{font-size:13px;color:var(--mut);line-height:1.5;text-align:center}
 </style>
 </head>
 <body>
@@ -1619,6 +1639,263 @@ G.xox=function(el){
   return function(){clearTimeout(tm)};
 };
 
+/* ===== 101 OKEY: saf motor (per/seri bulma) ===== */
+function okTile(id,ok){if(id>=104)return {id:id,c:ok.c,n:ok.n,f:1,w:0};var c=((id%52)/13)|0,n=id%13+1;return {id:id,c:c,n:n,f:0,w:(c===ok.c&&n===ok.n)?1:0}}
+/* Eldeki taşlardan puanı en yüksek, ayrık per/seri kümesini bulur. */
+function okArr(ts){
+  var W=[],R=[],ML=[],cnt=0;ts.forEach(function(t){(t.w?W:R).push(t)});
+  R.sort(function(a,b){return a.c-b.c||a.n-b.n});
+  var n=R.length,wl=W.length;
+  function add(k,a,ent,wc,p){var m=0,low=99;ent.forEach(function(x){if(x.ix>=0){m|=1<<x.ix;if(x.ix<low)low=x.ix}});if(low<99)ML.push({k:k,a:a,ent:ent,w:wc,p:p,m:m,low:low})}
+  for(var v=1;v<=13;v++)(function(v){var cp=[[],[],[],[]];R.forEach(function(t,k){if(t.n===v)cp[t.c].push(k)});
+    (function rec(c,ch){if(c===4){var k=ch.length;if(k<1)return;
+        for(var s=Math.max(3,k);s<=4;s++){var wc=s-k;if(wc>wl)continue;
+          var ent=ch.map(function(x){return {ix:x,c:R[x].c,n:v}}),used=ch.map(function(x){return R[x].c}),c2=0;
+          for(var q=0;q<wc;q++){while(used.indexOf(c2)>=0)c2++;used.push(c2);ent.push({ix:-1,c:c2,n:v})}
+          add('s',0,ent,wc,v*s)}
+        return}
+      rec(c+1,ch);cp[c].forEach(function(x){rec(c+1,ch.concat([x]))})})(0,[])})(v);
+  for(var c=0;c<4;c++)for(var a=1;a<=11;a++)for(var L=3;L<=Math.min(5,14-a);L++)(function(c,a,L){
+    (function rec(p,ent,wc,pts){if(p===a+L){add('r',a,ent,wc,pts);return}
+      var num=(p-1)%13+1;
+      R.forEach(function(t,k){if(t.c===c&&t.n===num)rec(p+1,ent.concat([{ix:k,c:c,n:num}]),wc,pts+num)});
+      if(wc<wl)rec(p+1,ent.concat([{ix:-1,c:c,n:num}]),wc+1,pts+num)})(a,[],0,0)})(c,a,L);
+  var by=[],i;for(i=0;i<n;i++)by.push([]);ML.forEach(function(m){by[m.low].push(m)});
+  var memo={};
+  function f(mask,wl2){var i=0;while(i<n&&((mask>>i)&1))i++;if(i>=n)return 0;var key=mask*8+wl2,o=memo[key];if(o)return o[0];
+    var best=f(mask|(1<<i),wl2),ch=null;
+    if(cnt<400000)by[i].forEach(function(m){cnt++;if((m.m&mask)===0&&m.w<=wl2){var v=m.p+f(mask|m.m,wl2-m.w);if(v>best){best=v;ch=m}}});
+    memo[key]=[best,ch];return best}
+  var pts=f(0,wl),groups=[],mask=0,um=0,wl2=wl,Wp=W.slice();
+  for(;;){var j=0;while(j<n&&((mask>>j)&1))j++;if(j>=n)break;f(mask,wl2);var o=memo[mask*8+wl2],ch=o&&o[1];
+    if(!ch){mask|=1<<j;continue}
+    mask|=ch.m;um|=ch.m;wl2-=ch.w;
+    groups.push({k:ch.k,a:ch.a,p:ch.p,e:ch.ent.map(function(x){return {id:x.ix>=0?R[x.ix].id:Wp.pop().id,c:x.c,n:x.n}})})}
+  var rest=R.filter(function(t,k){return !((um>>k)&1)}).concat(Wp);
+  return {pts:pts,groups:groups,rest:rest}}
+/* Masadaki bir pere taş eklenebilir mi? go=true ise ekler. */
+function okTryAdd(m,t,go){var e=m.e;if(m.k==='p')return false;
+  if(m.k==='s'){if(e.length>=4)return false;var nn=e[0].n,used=e.map(function(q){return q.c});
+    if(t.w){for(var c=0;c<4;c++)if(used.indexOf(c)<0){if(go)e.push({id:t.id,c:c,n:nn});return true}return false}
+    if(t.n!==nn||used.indexOf(t.c)>=0)return false;if(go)e.push({id:t.id,c:t.c,n:nn});return true}
+  if(e.length>=13)return false;
+  var c0=e[0].c,end=m.a+e.length-1,nxt=end+1,prv=m.a-1,lo=m.l||0,hi=m.h||0;
+  if(lo+hi>=3)return false;
+  if(hi<2&&nxt<=13&&(t.w||(t.c===c0&&t.n===nxt))){if(go){e.push({id:t.id,c:c0,n:nxt});m.h=hi+1}return true}
+  if(lo<2&&prv>=1&&(t.w||(t.c===c0&&t.n===prv))){if(go){e.unshift({id:t.id,c:c0,n:prv});m.a=prv;m.l=lo+1}return true}
+  return false}
+/* Çift açma: aynı renk+sayıdan iki taş = 1 çift (okey eksik taşı tamamlar) */
+function okPairs(ts){var W=[],R={},g=[],sg=[],wi=0;
+  ts.forEach(function(t){if(t.w)W.push(t);else{var k=t.c+'.'+t.n;(R[k]=R[k]||[]).push(t)}});
+  Object.keys(R).forEach(function(k){var a=R[k];while(a.length>=2){var x=a.pop(),y=a.pop();g.push({k:'p',e:[{id:x.id,c:x.c,n:x.n},{id:y.id,c:y.c,n:y.n}]})}if(a.length)sg.push(a[0])});
+  sg.forEach(function(t){if(wi<W.length)g.push({k:'p',e:[{id:t.id,c:t.c,n:t.n},{id:W[wi++].id,c:t.c,n:t.n}]})});
+  while(W.length-wi>=2){g.push({k:'p',e:[{id:W[wi].id,c:0,n:1},{id:W[wi+1].id,c:0,n:1}]});wi+=2}
+  var u={};g.forEach(function(q){q.e.forEach(function(x){u[x.id]=1})});
+  return {n:g.length,groups:g,rest:ts.filter(function(t){return !u[t.id]})}}
+/* Bot için: taşın eldeki diğer taşlarla birleşme potansiyeli */
+function okPot(t,h){var p=0;h.forEach(function(u){if(u.id===t.id||u.w)return;var d=Math.abs(u.n-t.n);
+  if(u.c===t.c){if(d===1)p+=2;else if(d===2)p+=1;else if(d===0)p+=1.5}else if(d===0)p+=2});return p}
+
+NORMAL.push({id:'okey',i:'🀄',n:'101 Okey',d:'3 bot ya da 4 kişi online'});
+/* ===== 101 OKEY: oyun (botlu + online) ===== */
+G.okey=function(el){
+  var CL=['#c98a00','#1f5fd0','#1b1b1b','#d6283a'],CN=['Sarı','Mavi','Siyah','Kırmızı'],BN=['Ayşe','Mehmet','Zeynep','Can','Elif','Burak'],
+    U=CLOUD_URL.replace(/\/$/,''),E=encodeURIComponent,ST={'.sv':'timestamp'},
+    mode=0,gs=null,seat=0,sel=-1,ss=[],multi=0,rm=null,rid=null,R=null,pollT=0,botT=0,paidId='',busy=0,dead=false,lsig='',cs='',ca=null;
+  function api(m,p,b){return roomBase().then(function(rb){if(!rb)return undefined;
+    return fetch(U+'/'+p.replace(/^rooms/,rb)+'.json',{method:m,body:b===undefined?undefined:JSON.stringify(b)}).then(function(r){if(!r.ok)ROOMERR=r.status;return r.ok?r.json():undefined}).catch(function(){return undefined})})}
+  function shuffle(a){for(var i=a.length-1;i>0;i--){var j=ri(i+1),t=a[i];a[i]=a[j];a[j]=t}return a}
+  if(typeof document!=='undefined'&&!document.getElementById('okcss')){var sy=document.createElement('style');sy.id='okcss';
+    sy.textContent='.okbar{position:sticky;top:6px;z-index:30;text-align:right;margin-bottom:6px}.okbar button{padding:7px 12px;font-size:13px;box-shadow:0 2px 10px #0006}.okrm{position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.65);display:flex;align-items:center;justify-content:center;padding:12px}.okrb{background:#1d2230;color:#f2f4f8;border-radius:16px;max-width:580px;width:100%;max-height:88vh;display:flex;flex-direction:column;box-shadow:0 10px 40px #000a}.okrh{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;border-bottom:1px solid #fff2;font-size:16px}.okrc{overflow:auto;padding:6px 14px 14px;line-height:1.55;font-size:14px}.okrc details{border-bottom:1px solid #fff1;padding:6px 0}.okrc summary{cursor:pointer;font-weight:bold;padding:4px 0}.okrc p{margin:4px 0}.okrc li{margin:2px 0}';document.head.appendChild(sy)}
+  var RULES=`<details open><summary>1 · Amaç ve genel mantık</summary><p>Elindeki bütün taşları per ve serilere yerleştirip eli bitirmek. Okey 101'de puan biriktirmek değil düşürmek hedeftir: <b>en az puanı alan kazanır</b>. Birden fazla el oynanır, toplamda en düşük (en negatif) puana sahip oyuncu galip gelir. Her elde başlayan oyuncu sıra ile değişir.</p></details>
+<details><summary>2 · Taşlar ve dağıtım</summary><ul><li>4 renk × 1-13 × 2 takım = 104 numaralı taş + 2 sahte okey = <b>106 taş</b>.</li><li>Herkese <b>21</b> taş, başlayacak oyuncuya <b>22</b> taş verilir. Başlayan çekmeden bir taş atarak oyunu başlatır.</li><li>Dağıtılan 85 taştan sonra ortada kapalı deste durur (20 taş). Gösterge ayrıca açılır.</li><li>Gösterge sahte okey çıkarsa yeniden çekilir.</li></ul></details>
+<details><summary>3 · Gösterge ve okey</summary><ul><li>Göstergenin <b>bir üst rakamı, aynı renkte okeydir</b>. (Mavi 5 gösterge → mavi 6 okey.)</li><li>Gösterge 13 ise okey 1 olur. Bu istisna <b>yalnız okey belirlemek içindir</b>; seriler 13'ten 1'e dönmez.</li><li>Okey joker gibi, kombinasyonda istenen taşın yerine geçer. Açılış ve bitiş hesaplarında yerini aldığı taşın değerinden sayılır.</li><li>Sahte okey (★) joker değildir; okey taşının kendi yerine geçen sıradan bir taştır.</li></ul></details>
+<details><summary>4 · Seri</summary><ul><li>Aynı renkten, ardışık en az 3 taş. Örnek: kırmızı 5-6-7.</li><li><b>13'ten sonra 1'e dönüş yoktur.</b> 10-11-12 ve 11-12-13 geçerli; 12-13-1 ve 13-1-2 geçersizdir.</li><li>Açılışta (yere indirirken) bir seri <b>en fazla 5 taş</b> olur.</li><li>Yerdeki seri işlemeyle uzar: bir uca aynı turda en fazla <b>2</b> taş; iki uca birden işlersen turda toplam en fazla <b>3</b> taş.</li></ul></details>
+<details><summary>5 · Per</summary><ul><li>Aynı sayıdan, farklı renklerden en az 3 taş (3 ya da 4 taş). Örnek: kırmızı 7 - mavi 7 - siyah 7.</li><li>Per ve serinin puanı taşların yüz değerleri toplamıdır: 11-11-11 perinin puanı 3×11 = <b>33</b>.</li></ul></details>
+<details><summary>6 · Açma (101)</summary><ul><li>Taşları indirmek için elindeki per/serilerin toplam değeri <b>en az 101</b> olmalı. Örnek: 4'lü 11 peri (44) + mavi 9-10-11 serisi (30) + 3'lü 9 peri (27) = 101.</li><li>Açan oyuncu masadaki serilere/perlere taş işleyebilir; açmayan işleyemez.</li><li><b>Katlamalı baraj:</b> ilk açan en az 101 ile açar. Sonra açan, önceki açanın sayısını en az 1 geçmek zorundadır (101 açıldıysa 102, 118 açıldıysa 119). Baraj her el yeniden başlar.</li><li><b>Elden bitiş</b> yapan (açtığı turda eli bitiren) barajı geçmek zorunda değildir; 101 yeterlidir.</li><li><b>Rekor:</b> 151 ve üzeri sayıyla ya da 7 ve üzeri çiftle açan oyuncu −101 ödül alır (🏅).</li></ul></details>
+<details><summary>7 · Çift açma</summary><ul><li>En az <b>5 çift</b> ile açılır (çift = aynı renk ve aynı sayıdan iki taş). Üst sınır yoktur, 9 çift de açılabilir. Çiftler ayrı ayrı yere konur. Okey bir çiftin eksik yarısını tamamlar.</li><li>Çiftle açan varsa sonraki çift açan 1 çift fazla açmalıdır: 5'ten sonra 6, 6'dan sonra 7.</li><li>Çift açan oyuncu da <b>işler</b>; yalnız yere yeni seri/per indiremez.</li><li>Seri/perle açan oyuncu elindeki çiftleri çift olarak indirebilir.</li><li>Çiftlere taş işlenmez.</li></ul></details>
+<details><summary>8 · Sıra akışı</summary><ol><li><b>Çek:</b> desteden çek ya da önceki oyuncunun attığını al.</li><li><b>Oyna:</b> aç, per/seri/çift indir, taş işle.</li><li><b>At:</b> bir taş at, sıra geçer.</li></ol><p><b>Bu oyuna özel:</b> Yandan taş aldıysan o taşı aynı el kullanmak zorundasın (kullanamayacaksan alamazsın). Açtıysan, masadaki okeyi gerçek taşıyla değiştirebilirsin (aldığın okeyi aynı el işlemelisin).</p></details>
+<details><summary>9 · Bitiş tipleri</summary><ul><li><b>Normal:</b> son taşı yere bırakarak (indirerek/işleyerek) biter.</li><li><b>Kafa:</b> son taşı atarak biter.</li><li><b>Çiftten:</b> çift açan oyuncu elinde taş kalmayana kadar bitirir.</li><li><b>Okey ile bitiş:</b> son taş olarak okey kullanılır.</li><li><b>Okey Kafa:</b> son taş olarak okey atılır.</li><li><b>Çiftten Okey:</b> çift açan, son taşta okeyle biter.</li></ul></details>
+<details open><summary>10 · Puanlama tablosu</summary><table style="width:100%;border-collapse:collapse;font-size:13px;text-align:center"><tr style="opacity:.75"><td align="left">Bitiş</td><td>Kazanan</td><td>Açmış rakip</td><td>Açmamış</td></tr><tr><td align="left">Normal</td><td>−101</td><td>Taş ×1</td><td>202</td></tr><tr><td align="left">Kafa</td><td>−202</td><td>Taş ×1</td><td>404</td></tr><tr><td align="left">Çiftten</td><td>−202</td><td>Taş ×2</td><td>404</td></tr><tr><td align="left">Okey ile bitiş</td><td>−202</td><td>Taş ×2</td><td>404</td></tr><tr><td align="left">Okey Kafa</td><td>−404</td><td>Taş ×2</td><td>808</td></tr><tr><td align="left">Çiftten Okey</td><td>−404</td><td>Taş ×4</td><td>808</td></tr></table><ul><li>Elde kalan taşlar yüz değeriyle sayılır (bu oyunda elde kalan okey 50).</li><li><b>Çift açıp bitiremeyen:</b> kalanın 2 katı yazılır, bu ×2 bitiş çarpanıyla birlikte uygulanır. Kalan toplam 100'ü geçerse +101 sabit ceza eklenir (bir kez, çarpansız). Örnek: kalan 103 → 206 + 101 = 307. Kalan 107, rakip okeyle bitti → 107×2×2 = 428 + 101 = 529. Kalan 45, rakip kafa attı → 90.</li><li>Perle açan oyuncunun elinde 101+ kalması ek ceza getirmez.</li><li>Rekor açan oyuncunun hanesinden ayrıca 101 düşer.</li><li>Deste biterse el berabere biter: kimse bitiş ödülü almaz, herkes kendi cezasını yazar.</li><li>Eli bitirene oyun içi +1500 puan verilir.</li></ul></details>
+<details open><summary>11 · Bu oyundaki kontroller</summary><ul><li>Taşa dokunarak seç. Birden çok taş seçmek için <b>☐ Çoklu</b> düğmesini aç; İşle, seçili taşların hepsini uygun yerlere işler.</li><li><b>Aç / Çift aç:</b> taş seçmediysen en iyi dizilimle açar; seçtiysen yalnız seçtiğin taşlarla açar (hepsi geçerli olmalı).</li><li><b>At / İşle / Okey al:</b> tek taş seçip kullan. 💡 İpucu atılacak en uygun taşı gösterir.</li><li><b>Yeni el</b> toplam puanı korur; <b>Yeni maç</b> puanları sıfırlar.</li><li>Online odada boş koltuklara bot oturur; 75 sn hareketsiz oyuncunun yerini bot alır.</li></ul></details>`;
+  function rb2(){return '<div class="okbar"><button id="okr" class="ghost">📖 Kurallar</button></div>'}
+  function closeR(){if(rm){rm.remove();rm=null}}
+  function showRules(){closeR();rm=document.createElement('div');rm.className='okrm';rm.innerHTML='<div class="okrb"><div class="okrh"><b>📖 101 Okey Kuralları</b><button class="ghost" id="okx">✕</button></div><div class="okrc">'+RULES+'</div></div>';document.body.appendChild(rm);rm.onclick=function(e){if(e.target===rm)closeR()};rm.querySelector('#okx').onclick=closeR}
+  function bindR(){var b=$('#okr');if(b)b.onclick=showRules}
+  
+  function tl(id){return okTile(id,gs.ok)}
+  function H(s){return gs.hands[s].map(tl)}
+  function arrC(s){var sg=gs.hands[s].join(',')+'|'+gs.ok.c+'.'+gs.ok.n;if(cs!==sg){cs=sg;ca=okArr(H(s))}return ca}
+  function nm(s){return gs.seats[s].n}
+  function say(t){gs.lg.push(t);if(gs.lg.length>5)gs.lg.shift()}
+  function lbl(t){return CN[t.c]+' '+t.n}
+  function rmv(s,id){var h=gs.hands[s],i=h.indexOf(id);if(i>=0)h.splice(i,1)}
+  function tv(t){return t.w?50:t.n}
+var FN=['Normal','Kafa','Çiftten','Okey ile bitiş','Okey Kafa','Çiftten Okey'],FW=[-101,-202,-202,-202,-404,-404],FO=[1,1,2,2,2,4],FU=[202,404,404,404,808,808];
+function fk(){if(gs.dr||gs.win<0)return 0;if(gs.op[gs.win]===2)return gs.okf?5:2;return gs.okf?(gs.kf?4:3):(gs.kf?1:0)}
+function rem(s){return gs.hands[s].reduce(function(a,id){return a+tv(tl(id))},0)}
+function pen(s){var k=fk(),nw=gs.dr||gs.win<0;if(!gs.op[s])return nw?202:FU[k];var r=rem(s),f=nw?1:FO[k];return gs.op[s]===2?r*2*f+(r>100?101:0):r*f}
+function sc(s){return (s===gs.win&&!gs.dr?FW[fk()]:pen(s))+(gs.rk[s]?-101:0)}
+function settle(){if(gs.sd)return;gs.sd=1;gs.tot=(gs.tot||[0,0,0,0]).map(function(x,i){return x+sc(i)})}
+function needFor(n,a){var c=a.groups.reduce(function(x,g){return x+g.e.length},0);return n-c<=1?101:gs.mo}
+function inGr(gr,id){return gr.some(function(g){return g.e.some(function(x){return x.id===id})})}
+function tkOk(s,gr){return gs.tk<0||gs.hands[s].indexOf(gs.tk)<0||inGr(gr,gs.tk)}
+function blocked(s){var h=gs.hands[s];return (gs.tk>=0&&h.indexOf(gs.tk)>=0)||(gs.jk>=0&&h.indexOf(gs.jk)>=0)}
+  function chk(s){if(!gs.hands[s].length&&gs.win<0){gs.win=s;say('🏆 '+nm(s)+' elini bitirdi!');settle();return true}return gs.win>=0}
+  function newGame(seats,tot,st0){var ids=[],i,s,k,st=st0||0;for(i=0;i<106;i++)ids.push(i);shuffle(ids);
+    var ii=0;while(ids[ii]>=104)ii++;var ind=ids.splice(ii,1)[0],ok={c:((ind%52)/13)|0,n:(ind%13+1)%13+1},hands=[[],[],[],[]];
+    for(s=0;s<4;s++)for(k=0;k<21;k++)hands[s].push(ids.pop());hands[st].push(ids.pop());
+    return {id:Math.random().toString(36).slice(2),seats:seats,ind:ind,ok:ok,pile:ids,hands:hands,disc:[[],[],[],[]],table:[],op:[0,0,0,0],turn:st,st:st,tot:tot||[0,0,0,0],rk:[0,0,0,0],kf:0,sd:0,ph:'disc',win:-1,rev:1,ts:SOC.now(),mo:101,mp:5,tk:-1,jk:-1,okf:0,dr:0,lg:['Oyun başladı, '+seats[st].n+' başlıyor (22 taş, çekmeden atar).']}}
+  function endPen(why){var b=0,bp=1e9;for(var i=0;i<4;i++){var p=pen(i);if(p<bp){bp=p;b=i}}gs.win=b;gs.dr=1;say(why+' El bitti, en az ceza: '+nm(b)+'.');settle()}
+  function drawP(s){if(!gs.pile.length){endPen('Deste bitti.');return false}
+    gs.hands[s].push(gs.pile.pop());gs.tk=-1;gs.ph='disc';say(nm(s)+' desteden çekti.');return true}
+  function takeD(s){var p=(s+3)%4,d=gs.disc[p];if(!d.length)return false;var id=d.pop();gs.hands[s].push(id);gs.tk=id;gs.ph='disc';say(nm(s)+', '+nm(p)+' oyuncusunun attığı '+lbl(tl(id))+' taşını aldı.');return true}
+  /* Yandan alınan taş kullanılabiliyorsa alınabilir (101 kuralı) */
+  function canTake(s){var d=gs.disc[(s+3)%4];if(!d.length)return false;var id=d[d.length-1],t=tl(id),h=H(s).concat([t]);
+    if(gs.op[s])return gs.table.some(function(m){return okTryAdd(m,t,0)})||(gs.op[s]===1&&inGr(okArr(h).groups,id))||inGr(okPairs(h).groups,id);
+    var a=okArr(h);if(a.pts>=needFor(h.length,a)&&inGr(a.groups,id))return true;
+    var p=okPairs(h);return p.n>=gs.mp&&inGr(p.groups,id)}
+  function pick(s){var h=H(s),a=okArr(h),c=a.rest.filter(function(t){return !t.w});if(!c.length)c=h.filter(function(t){return !t.w});if(!c.length)c=h;var best=null,bs=1e9;c.forEach(function(t){var sc=okPot(t,h)*10-t.n/100;if(sc<bs){bs=sc;best=t}});return best.id}
+  function layM(s,ids){if(gs.op[s]===2)return false;var a=okArr(ids?ids.map(tl):H(s));if(ids&&a.rest.length)return false;if(gs.op[s]?!a.groups.length:a.pts<needFor(gs.hands[s].length,a))return false;if(!tkOk(s,a.groups))return false;
+    var jk2=a.groups.some(function(g){return g.e.some(function(x){return tl(x.id).w})});
+    a.groups.forEach(function(g){gs.table.push({o:s,k:g.k,a:g.a,e:g.e});g.e.forEach(function(x){rmv(s,x.id)})});if(!gs.hands[s].length&&jk2)gs.okf=1;
+    say(nm(s)+(gs.op[s]?' per indirdi (':' açtı (')+a.pts+' puan).');if(!gs.op[s]){gs.mo=Math.max(gs.mo,a.pts+1);if(a.pts>=151){gs.rk[s]=1;say('🏅 '+nm(s)+' rekor açtı (−101)!')}}gs.op[s]=1;chk(s);return true}
+  function layP(s,ids){var p=okPairs(ids?ids.map(tl):H(s));if(ids&&p.rest.length)return false;if(!p.n)return false;if(!gs.op[s]&&p.n<gs.mp)return false;if(!tkOk(s,p.groups))return false;
+    var jk3=p.groups.some(function(g){return g.e.some(function(x){return tl(x.id).w})});
+    p.groups.forEach(function(g){gs.table.push({o:s,k:'p',a:0,e:g.e});g.e.forEach(function(x){rmv(s,x.id)})});if(!gs.hands[s].length&&jk3)gs.okf=1;
+    say(nm(s)+(gs.op[s]?' çift indirdi (':' çift açtı (')+p.n+' çift).');if(!gs.op[s]){gs.mp=Math.max(gs.mp,p.n+1);gs.op[s]=2;if(p.n>=7){gs.rk[s]=1;say('🏅 '+nm(s)+' rekor açtı (−101)!')}}chk(s);return true}
+  /* Masadaki okeyi, yerine geçtiği gerçek taşla değiştir; alınan okey aynı el işlenmeli */
+  function findSw(s,id){var t=tl(id);if(t.w||!gs.op[s])return null;
+    for(var i=0;i<gs.table.length;i++){var m=gs.table[i];if(m.k==='p')continue;
+      for(var j=0;j<m.e.length;j++){var x=m.e[j];if(!tl(x.id).w)continue;
+        if(m.k==='r'?(t.c===x.c&&t.n===x.n):(t.n===x.n&&!m.e.some(function(q,qi){return qi!==j&&q.c===t.c})))return {m:m,j:j}}}return null}
+  function swapJ(s,id,go){var f=findSw(s,id);if(!f)return false;var x=f.m.e[f.j],o={id:x.id,c:x.c,n:x.n},t=tl(id);
+    x.id=id;x.c=t.c;x.n=t.n;var jt=tl(o.id),ok=gs.table.some(function(m){return okTryAdd(m,jt,0)});
+    if(!ok||!go){x.id=o.id;x.c=o.c;x.n=o.n;return ok}
+    rmv(s,id);gs.hands[s].push(o.id);gs.jk=o.id;say(nm(s)+' masadaki okeyi '+lbl(t)+' ile değiştirdi.');return true}
+  function addT(s,id){if(!gs.op[s])return false;var t=tl(id);for(var i=0;i<gs.table.length;i++)if(okTryAdd(gs.table[i],t,1)){rmv(s,id);if(!gs.hands[s].length&&t.w)gs.okf=1;say(nm(s)+' bir pere '+(t.w?'okey':lbl(t))+' işledi.');chk(s);return true}return false}
+  function dis(s,id){var t=tl(id);rmv(s,id);gs.tk=-1;gs.jk=-1;if(!gs.hands[s].length){gs.kf=1;if(t.w)gs.okf=1}gs.table.forEach(function(m){m.l=0;m.h=0});gs.disc[s].push(id);say(nm(s)+' '+lbl(t)+' attı.');gs.n=(gs.n||0)+1;if(!chk(s)){if(gs.n>=160)endPen('Tur sınırı doldu.');else{gs.turn=(s+1)%4;gs.ph='draw';gs.ts=SOC.now()}}}
+  function bot(s){
+    if(gs.ph==='draw'){var p=(s+3)%4,d=gs.disc[p],top=d.length?d[d.length-1]:-1,took=false;
+      if(top>=0){var h0=H(s),a0=okArr(h0),t=tl(top),a1=okArr(h0.concat([t])),inG=a1.groups.some(function(g){return g.e.some(function(x){return x.id===top})});
+        if(canTake(s)&&((inG&&a1.pts>a0.pts)||okPot(t,h0)>=4||gs.op[s])&&(gs.n||0)<60)took=takeD(s)}
+      if(!took&&!drawP(s))return}
+    if(gs.win>=0)return;
+    if(!layM(s)&&(gs.op[s]||(gs.n||0)>=24))layP(s);if(gs.win>=0)return;
+    if(gs.op[s])gs.hands[s].slice().forEach(function(id){if(gs.win<0&&findSw(s,id))swapJ(s,id,1)});
+    if(gs.op[s])for(;;){var f=0;gs.hands[s].slice().forEach(function(id){if(gs.win<0&&addT(s,id))f=1});if(!f||gs.win>=0)break}
+    if(gs.win>=0)return;
+    dis(s,pick(s))}
+  function sched(){clearTimeout(botT);if(mode||dead||!gs||gs.win>=0)return;
+    if(gs.seats[gs.turn].b)botT=setTimeout(function(){if(dead||!gs||gs.win>=0)return;bot(gs.turn);gs.rev++;drawGame();sched()},1100)}
+  function commit(n){gs.rev++;drawGame();if(!mode)return sched();
+    api('PUT','rooms/'+rid+'/gs',JSON.stringify(gs)).then(function(ok){if(ok===undefined&&!dead&&(n||0)<3)setTimeout(function(){if(!dead&&rid)commit2(n||0)},1500)})}
+  function commit2(n){api('PUT','rooms/'+rid+'/gs',JSON.stringify(gs)).then(function(ok){if(ok===undefined&&n<3&&!dead)setTimeout(function(){commit2(n+1)},1500)})}
+
+  /* ---------- görünüm ---------- */
+  function th(t,x,eff){return '<b class="ot'+(t.w?' ow':'')+(x||'')+'" style="--c:'+CL[t.c]+'">'+(t.f&&!eff?'★':t.n)+'<i></i></b>'}
+  function stopAll(){clearInterval(pollT);clearTimeout(botT)}
+  function menu(msg){stopAll();rid=null;R=null;gs=null;mode=0;sel=-1;
+    el.innerHTML=rb2()+'<div class="panel"><h2>🀄 101 Okey</h2><div class="msg">'+(msg||'Taş çek, per/seri yap, 101 puanla aç, elini bitir.')+'</div><div class="row"><button id="mb">🤖 Botlarla oyna</button><button id="mo" class="ghost"'+(CLOUD_URL?'':' disabled')+'>🌐 Online oda (4 kişi)</button></div>'+
+     '<div class="note" style="text-align:left;opacity:.85;line-height:1.5">• Detaylı tüm kurallar için sağ üstteki <b>📖 Kurallar</b> düğmesine bas.<br>• 21 taş (başlayan 22), 101 puanla ya da 5 çiftle aç. Seri 13 sayısından sonra 1 ile devam etmez, indirilen seri en fazla 5 taş. Birden çok el oynanır, en az puan kazanır.</div></div>';
+    $('#mb').onclick=function(){startBots()};$('#mo').onclick=olobby;bindR()}
+  function startBots(keep){stopAll();mode=0;seat=0;var n=shuffle(BN.slice()),sts=keep&&gs?gs.seats:[{k:meKey,n:me.name,b:0},{k:'',n:n[0]+' 🤖',b:1},{k:'',n:n[1]+' 🤖',b:1},{k:'',n:n[2]+' 🤖',b:1}];
+    gs=keep&&gs?newGame(sts,gs.tot,(gs.st+1)%4):newGame(sts);sel=-1;ss=[];paidId='';drawGame();sched()}
+  function drawGame(){if(dead||!gs)return;
+    ss=ss.filter(function(id){return gs.hands[seat<0?0:seat].indexOf(id)>=0});sel=ss.length===1?ss[0]:-1;
+    var me2=seat<0?0:seat,play=seat>=0&&gs.turn===seat&&gs.win<0,a=arrC(me2),i,s,pb='',dc='',h='';
+    for(i=0;i<4;i++){s=(me2+i)%4;var q=gs.seats[s];
+      pb+='<div class="okpl'+(gs.turn===s&&gs.win<0?' on':'')+'"><span>'+(s===me2&&!mode?avH(pfd(),26):q.b?'🤖':'👤')+'</span><b>'+esc(q.n)+(s===me2?' (sen)':'')+'</b><small>'+gs.hands[s].length+' taş'+(gs.op[s]===2?' · çift açtı':gs.op[s]?' · açtı':'')+' · Σ '+gs.tot[s]+'</small></div>'}
+    var ind=tl(gs.ind),pr=okPairs(H(me2)),sa=ss.length>1?okArr(ss.map(tl)):null,sp=ss.length>1?okPairs(ss.map(tl)):null,
+      selOk=!!sa&&!sa.rest.length&&sa.groups.length>0,selP=!!sp&&!sp.rest.length&&sp.n>0;
+    for(i=0;i<4;i++){s=(me2+i)%4;var d=gs.disc[s],tp=d.length?d[d.length-1]:-1;
+      dc+='<div class="okd'+(s===(me2+3)%4?' hl':'')+'"><small>'+esc(nm(s).split(' ')[0])+'</small>'+(tp>=0?th(tl(tp),' sm'):'<b class="ot sm em"></b>')+'</div>'}
+    var ct='<div class="okc"><div><small>Gösterge</small>'+th(ind)+'</div><div><small>Okey</small>'+th({c:gs.ok.c,n:gs.ok.n,w:1,f:0})+'</div><div class="okpile"><small>Deste</small><b>'+gs.pile.length+'</b></div></div><div class="okds">'+dc+'</div>';
+    var tb=gs.table.length?gs.table.map(function(m){return '<div class="okm">'+m.e.map(function(x){var tt=tl(x.id);return th({c:x.c,n:x.n,w:tt.w,f:tt.f},' sm',1)}).join('')+'<small>'+(m.k==='p'?'Çift':m.k==='r'?'Seri':'Per')+' · '+esc(nm(m.o).split(' ')[0])+'</small></div>'}).join(''):'<div class="s-empty">Henüz açılan per yok.</div>';
+    function rb(t){return '<button class="ot'+(t.w?' ow':'')+(ss.indexOf(t.id)>=0?' sel':'')+'" data-id="'+t.id+'" style="--c:'+CL[t.c]+'">'+(t.f?'★':t.n)+'<i></i></button>'}
+    var rest=a.rest.slice().sort(function(x,y){return x.c-y.c||x.n-y.n}),
+      rk=a.groups.map(function(g){return '<span class="okg">'+g.e.map(function(x){return rb(tl(x.id))}).join('')+'</span>'}).join('')+(rest.length?'<span class="okg">'+rest.map(rb).join('')+'</span>':'');
+    var inH=sel>=0&&gs.hands[me2].indexOf(sel)>=0,dph=play&&gs.ph==='disc',
+      canD=play&&gs.ph==='draw',canT=canD&&canTake(me2),canA=dph&&inH,
+      canO=dph&&gs.op[me2]!==2&&(sa?(selOk&&(gs.op[me2]||sa.pts>=needFor(gs.hands[me2].length,sa))&&tkOk(me2,sa.groups)):(gs.op[me2]?a.groups.length>0:a.pts>=needFor(gs.hands[me2].length,a)&&tkOk(me2,a.groups))),
+      canP=dph&&(sp?(selP&&sp.n>=(gs.op[me2]?1:gs.mp)&&tkOk(me2,sp.groups)):(pr.n>=(gs.op[me2]?1:gs.mp)&&tkOk(me2,pr.groups))),
+      canI=dph&&gs.op[me2]>=1&&ss.some(function(id){return gs.table.some(function(m){return okTryAdd(m,tl(id),0)})}),
+      canS=dph&&inH&&swapJ(me2,sel,0),blk=dph&&blocked(me2);
+    canA=canA&&!blk;
+    var why=dph&&ss.length&&!canI?(gs.op[me2]===0?' İşlemek için önce elini açmalısın.':' Seçili taş masadaki pere uymuyor (seride bir uca turda en fazla 2, toplam 3 taş işlenir).'):'',
+      st=gs.win>=0?'':play?(gs.ph==='draw'?'Sıra sende: deste ya da yandaki taşı al.':blk?'Aldığın taşı/okeyi bir pere kullanmadan taş atamazsın.':'Sıra sende: bir taş seç, at ya da işle.'+why):nm(gs.turn)+' oynuyor...';
+    h=rb2()+'<div class="okpb">'+pb+'</div><div class="panel okpn">'+ct+'</div><div class="panel"><h3>Masadaki perler</h3><div class="okt">'+tb+'</div></div>'+
+      '<div class="panel"><div class="okh" id="okh">'+rk+'</div><div class="msg">'+(gs.op[me2]===2?'Çift açtın ✓':gs.op[me2]?'Açtın ✓':'Açılabilir: <b>'+a.pts+'</b>/'+gs.mo+' puan · <b>'+pr.n+'</b>/'+gs.mp+' çift')+(ss.length>1?' · seçili: '+ss.length+' taş '+(selOk?'✓ per/seri':selP?'✓ çift':'✗ geçersiz'):'')+'</div>'+
+      '<div class="row okb"><button id="od"'+(canD?'':' disabled')+'>🂠 Çek</button><button id="ot"'+(canT?'':' disabled')+'>↩ Yandan al</button><button id="oa"'+(canA?'':' disabled')+'>At</button><button id="oo" class="out"'+(canO?'':' disabled')+'>'+(gs.op[me2]?'Per indir':'Aç')+'</button><button id="op" class="out"'+(canP?'':' disabled')+'>'+(gs.op[me2]?'Çift indir':'Çift aç')+'</button><button id="oi" class="ghost"'+(canI?'':' disabled')+'>İşle</button><button id="os" class="ghost"'+(canS?'':' disabled')+'>Okey al</button><button id="oh" class="ghost"'+(dph&&!blk?'':' disabled')+'>💡 İpucu</button><button id="om" class="'+(multi?'out':'ghost')+'">'+(multi?'☑':'☐')+' Çoklu</button></div></div>'+
+      '<div class="panel"><div class="msg" style="min-height:0;font-weight:bold">'+st+'</div><div class="oklg">'+gs.lg.slice(-4).map(function(l){return '<div>'+esc(l)+'</div>'}).join('')+'</div></div>';
+    if(gs.win>=0){var k=fk(),rows=gs.seats.map(function(q,s2){var w=s2===gs.win&&!gs.dr,v=sc(s2);return '<div class="s-row n"><div class="s-i"><b>'+(w?'🏆 ':'')+esc(q.n)+(gs.rk[s2]?' 🏅':'')+'</b><small>'+(w?'eli bitirdi':gs.op[s2]?(gs.op[s2]===2?'çift açtı':'açtı')+' · kalan '+rem(s2):'açmadı')+(gs.rk[s2]?' · rekor −101':'')+' · toplam '+gs.tot[s2]+'</small></div><b>'+(v>0?'+':'')+v+'</b></div>'}).join('');
+      h+='<div class="panel"><h3>'+(gs.dr?'Deste bitti':(gs.win===seat?'Kazandın! 🎉 ':esc(nm(gs.win))+' kazandı ')+'· '+FN[k])+'</h3>'+rows+'<div class="row">'+((!mode||(R&&R.host===meKey))?'<button id="on">Yeni el</button>'+(!mode?'<button id="onm" class="ghost">Yeni maç</button>':''):'<div class="s-empty" style="flex:1">Oda sahibi yeni oyunu başlatabilir.</div>')+'</div></div>';
+      if(gs.win===seat&&!gs.dr&&paidId!==gs.id){paidId=gs.id;burst();bonus(1500)}}
+    h+='<div class="row"><button class="ghost" id="olv">'+(mode?'Odadan çık':'Menüye dön')+'</button></div>';
+    el.innerHTML=h;bindR();
+    el.querySelectorAll('#okh .ot').forEach(function(b){b.onclick=function(){var id=+b.dataset.id,k=ss.indexOf(id);if(k>=0)ss.splice(k,1);else if(multi)ss.push(id);else ss=[id];drawGame()}});
+    function act(fn){if(seat<0||gs.turn!==seat||gs.win>=0)return;fn();sel=-1;ss=[];commit()}
+    $('#od').onclick=function(){act(function(){if(gs.ph==='draw')drawP(seat)})};
+    $('#ot').onclick=function(){act(function(){if(gs.ph==='draw')takeD(seat)})};
+    $('#om').onclick=function(){multi=!multi;if(!multi&&ss.length>1)ss=ss.slice(0,1);drawGame()};
+    $('#oh').onclick=function(){if(dph&&!blk){ss=[pick(seat)];drawGame()}};
+    $('#oa').onclick=function(){var id=sel;if(id>=0&&tl(id).w&&!confirm('Okeyi atmak istediğine emin misin?'))return;act(function(){if(gs.ph==='disc'&&gs.hands[seat].indexOf(id)>=0)dis(seat,id)})};
+    $('#oo').onclick=function(){var ids=ss.length>1?ss.slice():null;act(function(){if(gs.ph==='disc')layM(seat,ids)})};
+    $('#op').onclick=function(){var ids=ss.length>1?ss.slice():null;act(function(){if(gs.ph==='disc')layP(seat,ids)})};
+    $('#os').onclick=function(){var id=sel;act(function(){if(gs.ph==='disc')swapJ(seat,id,1)})};
+    $('#oi').onclick=function(){var ids=ss.slice();act(function(){if(gs.ph!=='disc'||!gs.op[seat])return;for(var g=1;g;){g=0;ids=ids.filter(function(id){if(gs.win<0&&gs.hands[seat].indexOf(id)>=0&&addT(seat,id)){g=1;return false}return true})}})};
+    $('#olv').onclick=function(){leave();menu()};
+    var onm=$('#onm');if(onm)onm.onclick=function(){startBots()};
+    var on=$('#on');if(on)on.onclick=function(){
+      if(!mode){startBots(1);return}
+      var pl=R.pl||{},n=SOC.now(),sts=gs.seats.map(function(q){return q.k&&pl[q.k]&&n-(pl[q.k].hb||0)<=40000?{k:q.k,n:q.n,b:0}:{k:'',n:q.n.replace(' 🤖','')+' 🤖',b:1}});
+      gs=newGame(sts,gs.tot,(gs.st+1)%4);sel=-1;paidId='';commit()}}
+
+  /* ---------- online oda ---------- */
+  function leave(){var id=rid;stopAll();if(!id)return;rid=null;
+    if(R&&R.host===meKey)api('DELETE','rooms/'+id);else api('DELETE','rooms/'+id+'/pl/'+E(meKey));R=null}
+  function olobby(msg){stopAll();rid=null;R=null;gs=null;mode=1;
+    el.innerHTML=rb2()+'<div class="panel"><h2>🌐 Okey odaları</h2><div class="msg">'+(msg||'Oda kur ya da katıl. Boş koltuklara bot oturur.')+'</div><div class="row"><button id="mk">Oda kur</button><button class="ghost" id="rf">Yenile</button><button class="ghost" id="bk">← Geri</button></div><div class="s-send"><input type="text" id="jc" maxlength="8" placeholder="Oda kodu" autocomplete="off" autocapitalize="characters"><button id="jb">Kodla katıl</button></div></div><div id="rl"></div>';
+    bindR();$('#mk').onclick=function(){this.disabled=true;make()};$('#rf').onclick=list;$('#bk').onclick=function(){menu()};
+    function byCode(){var v=($('#jc').value||'').trim().toLowerCase().replace(/[^a-z0-9]/g,'');if(v){$('#jb').disabled=true;join(v)}}
+    $('#jb').onclick=byCode;$('#jc').onkeydown=function(e){if(e.key==='Enter')byCode()};list();pollT=setInterval(list,5000)}
+  function list(){api('GET','rooms').then(function(d){var b=$('#rl');if(!b||rid)return;if(d===undefined){b.innerHTML='<div class="s-empty">Odalar yüklenemedi'+roomErr()+'</div>';return}
+    var a=Object.keys(d||{}).filter(function(k){return d[k]&&d[k].g==='okey'&&SOC.now()-(d[k].hb||0)<25000});
+    b.innerHTML=a.length?a.map(function(k){var o=d[k],n=Object.keys(o.pl||{}).length,pl=o.st==='play';return '<div class="s-row n"><div class="s-i"><b>'+esc(o.name||'Oda')+'</b><small>'+n+'/4 oyuncu'+(pl?' · oyunda':'')+'</small></div><button data-r="'+esc(k)+'"'+((n>=4||pl)?' disabled':'')+'>'+(pl?'Oyunda':n>=4?'Dolu':'Katıl')+'</button></div>'}).join(''):'<div class="s-empty">Açık oda yok. İlk odayı sen kur!</div>';
+    b.querySelectorAll('[data-r]').forEach(function(x){x.onclick=function(){x.disabled=true;join(x.dataset.r)}})})}
+  function make(){var id=Math.random().toString(36).slice(2,8),p={};p[meKey]={n:me.name,hb:ST,j:ST};
+    api('PUT','rooms/'+id,{name:me.name+' okey odası',g:'okey',host:meKey,hb:ST,st:'lobby',pl:p}).then(function(ok){ok===undefined?olobby('Oda kurulamadı'+roomErr()):enter(id)})}
+  function join(id){api('GET','rooms/'+id).then(function(r){
+    if(!r)return olobby('Oda bulunamadı.');if(r.g!=='okey')return olobby('Bu oda başka bir oyun için.');
+    var pl=r.pl||{};if(!pl[meKey]){if(r.st==='play')return olobby('Oyun başlamış.');if(Object.keys(pl).length>=4)return olobby('Oda dolu (4/4).')}
+    api('PUT','rooms/'+id+'/pl/'+E(meKey),{n:me.name,hb:ST,j:ST}).then(function(ok){ok===undefined?olobby('Katılınamadı'+roomErr()):enter(id)})})}
+  function enter(id){stopAll();rid=id;R=null;gs=null;mode=1;lsig='';seat=-1;sel=-1;el.innerHTML='<div class="panel"><div class="s-empty">Odaya bağlanılıyor...</div></div>';pollT=setInterval(poll,1000);poll()}
+  function lobbyView(){var pl=R.pl||{},ks=Object.keys(pl).sort(function(a,b){return ((pl[a].j||0)-(pl[b].j||0))||(a<b?-1:1)}),sg=ks.join(',')+'|'+R.host;if(sg===lsig&&$('#ost')||sg===lsig&&$('#olw'))return;lsig=sg;var CODE=rid.toUpperCase();
+    el.innerHTML=rb2()+'<div class="panel"><h2>'+esc(R.name||'Okey odası')+'</h2><div class="row" style="align-items:center"><span>Oda kodu: <b style="letter-spacing:2px;font-size:18px">'+CODE+'</b></span><button class="ghost" id="cp">Kopyala</button></div><h3>Oyuncular ('+ks.length+'/4)</h3>'+
+      ks.map(function(k){return '<div class="s-row n"><div class="s-i"><b>'+esc(pl[k].n||k)+(k===R.host?' 👑':'')+(k===meKey?' (sen)':'')+'</b></div></div>'}).join('')+
+      '<div class="msg">'+(R.host===meKey?'Boş koltuklara '+(4-ks.length)+' bot oturacak.':'Oda sahibinin başlatması bekleniyor...')+'</div><div class="row">'+(R.host===meKey?'<button id="ost">Oyunu başlat</button>':'<span id="olw"></span>')+'<button class="ghost" id="olv">Odadan çık</button></div></div>';
+    bindR();$('#cp').onclick=function(){var b=this;function d(){b.textContent='Kopyalandı ✓';setTimeout(function(){b.textContent='Kopyala'},1500)}if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(CODE).then(d,function(){prompt('Kodu kopyala:',CODE)});else prompt('Kodu kopyala:',CODE)};
+    $('#olv').onclick=function(){leave();olobby()};
+    var o=$('#ost');if(o)o.onclick=function(){this.disabled=true;var n=shuffle(BN.slice()),sts=ks.slice(0,4).map(function(k){return {k:k,n:pl[k].n||k,b:0}}),bi=0;
+      while(sts.length<4)sts.push({k:'',n:n[bi++]+' 🤖',b:1});shuffle(sts);var g=newGame(sts);paidId='';
+      api('PATCH','rooms/'+rid,{st:'play',gs:JSON.stringify(g)})}}
+  function poll(){if(!rid||document.hidden)return;var id=rid;
+    api('GET','rooms/'+id).then(function(r){if(rid!==id||r===undefined||dead)return;
+      if(!r){rid=null;stopAll();return olobby('Oda kapatıldı.')}
+      var pl=r.pl||{},n=SOC.now();R=r;
+      if(!pl[meKey]){rid=null;stopAll();return olobby('Odadan çıkarıldın.')}
+      if(r.host!==meKey&&n-(r.hb||0)>30000){api('DELETE','rooms/'+id);rid=null;stopAll();return olobby('Oda sahibi ayrıldı.')}
+      api('PATCH','rooms/'+id+'/pl/'+E(meKey),{hb:ST});if(r.host===meKey)api('PATCH','rooms/'+id,{hb:ST});
+      var g=null;if(typeof r.gs==='string')try{g=JSON.parse(r.gs)}catch(e){}
+      if(g&&(!gs||g.id!==gs.id||g.rev>gs.rev)){gs=g;seat=gs.seats.findIndex(function(q){return q.k===meKey});sel=-1;drawGame()}
+      else if(!gs)lobbyView();
+      if(r.host===meKey&&gs&&gs.win<0&&!busy){var s=gs.turn,q=gs.seats[s],go=q.b?900:0;
+        if(!q.b){var p=pl[q.k];if(!p||n-(p.hb||0)>40000){q.b=1;go=900}else if(q.k!==meKey&&n-gs.ts>75000)go=300}
+        if(go){busy=1;setTimeout(function(){busy=0;if(dead||!gs||gs.turn!==s||gs.win>=0||!rid)return;bot(s);commit()},go)}}})}
+  menu();
+  return function(){dead=true;closeR();leave();stopAll()};
+};
+
 /* ===== ONLINE ODA: her kumar oyununun kendi odası, en fazla 4 kişi (Firebase REST) ===== */
 var ROOMB=null,ROOMERR='';
 /* Oda verisi için yazılabilir bir Firebase yolu bulur: önce 'rooms', izin yoksa 'presence/_rooms'. */
@@ -1636,7 +1913,7 @@ G.oda=function(el,game){
     return fetch(U+'/'+p.replace(/^rooms/,rb)+'.json',{method:m,body:b===undefined?undefined:JSON.stringify(b)}).then(function(r){if(!r.ok)ROOMERR=r.status;return r.ok?r.json():undefined}).catch(function(){return undefined})})}
   function lobby(msg){clearInterval(t);clearInterval(cdT);clearInterval(lvT);if(zc){zc();zc=null}rid=null;R=null;nx=0;
     el.innerHTML='<div class="panel"><h2>Online odalar</h2><div class="msg">'+(msg||'Oda kur ya da bir odaya katıl. En fazla 4 kişi.')+'</div><div class="row"><button id="mk">Oda kur</button><button class="ghost" id="rf">Yenile</button></div><div class="s-send"><input type="text" id="jc" maxlength="8" placeholder="Oda kodu gir" autocomplete="off" autocapitalize="characters"><button id="jb">Kodla katıl</button></div></div><div id="rl"></div>';
-    $('#mk').onclick=function(){this.disabled=true;make()};$('#rf').onclick=list;
+    bindR();$('#mk').onclick=function(){this.disabled=true;make()};$('#rf').onclick=list;
     function byCode(){var v=($('#jc').value||'').trim().toLowerCase().replace(/[^a-z0-9]/g,'');if(!v)return;$('#jb').disabled=true;join(v)}
     $('#jb').onclick=byCode;$('#jc').onkeydown=function(e){if(e.key==='Enter')byCode()};list();t=setInterval(list,5000)}
   function list(){api('GET','rooms').then(function(d){var b=$('#rl');if(!b||rid)return;if(d===undefined){b.innerHTML='<div class="s-empty">Odalar yüklenemedi'+roomErr()+'</div>';return}
