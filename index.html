@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"><meta name="theme-color" content="#0e1630"><meta http-equiv="Cache-Control" content="no-cache">
 <title>Oyun Merkezi</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%233b4cca'/%3E%3Cstop offset='1' stop-color='%23e8836b'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='64' height='64' rx='16' fill='url(%23g)'/%3E%3Cpath d='M15 27 7 18l4 10zM15 31 7 40l4-10z' fill='%23ffc857'/%3E%3Cellipse cx='34' cy='29' rx='21' ry='10' fill='%23fdf3e3'/%3E%3Crect x='13' y='27' width='42' height='3.6' fill='%23ffc857'/%3E%3Crect x='27' y='38' width='14' height='6.5' rx='2.5' fill='%232b3a74'/%3E%3C/svg%3E">
 <style>
 :root{--bg:#0e1630;--panel:#15203f;--line:#33427a;--ink:#fdf3e3;--mut:#c9b8a6;--acc:#ffc857;--ok:#7be0a4;--bad:#ff6b6b}
 *{box-sizing:border-box}
@@ -288,11 +289,32 @@ canvas.sn{transform:translateZ(0)}
 .av{flex:none!important;aspect-ratio:1/1;min-width:var(--s);max-width:var(--s)}
 #tabs{flex-wrap:wrap}
 #tabs .tab{flex:1 1 30%;padding:10px 6px;font-size:15px;white-space:nowrap}
+/* logo */
+h1.logo{background:none;-webkit-text-fill-color:initial;color:var(--ink);gap:12px;margin:0 0 14px}
+h1.logo svg{animation:none;filter:drop-shadow(0 5px 12px rgba(232,131,107,.5))}
+.lt{display:flex;flex-direction:column;line-height:1}
+.lt b{font-size:34px;font-weight:900;letter-spacing:-1px;background:linear-gradient(90deg,#fff,#ffc857);-webkit-background-clip:text;background-clip:text;color:transparent}
+.lt small{font-size:12px;font-weight:800;letter-spacing:6px;color:var(--acc);margin-top:3px}
+.lg .zp{animation:lgf 3.2s ease-in-out infinite}.lg .tw{animation:tw 2s ease-in-out infinite alternate}
+@keyframes lgf{50%{transform:translateY(-2.5px)}}@keyframes tw{from{opacity:.25}to{opacity:1}}
+@media (max-width:380px){.lt b{font-size:29px}.lt small{letter-spacing:4px}}
 </style>
 </head>
 <body>
 <main>
-  <h1><svg width="46" height="30" viewBox="0 0 46 30" aria-hidden="true"><path d="M8 13 1 5v16z" fill="#e8836b"/><ellipse cx="26" cy="13" rx="18" ry="9" fill="#fdf3e3"/><rect x="24" y="5" width="4" height="16" fill="#ffc857"/><rect x="22" y="22" width="9" height="4" rx="1" fill="#ffc857"/></svg>Oyun Merkezi</h1>
+  <h1 class="logo"><svg class="lg" width="56" height="56" viewBox="0 0 64 64" aria-hidden="true">
+    <defs><linearGradient id="lgb" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3b4cca"/><stop offset="1" stop-color="#e8836b"/></linearGradient>
+    <linearGradient id="lgz" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff"/><stop offset=".6" stop-color="#f4e7d3"/><stop offset="1" stop-color="#b9a48c"/></linearGradient>
+    <clipPath id="lgc"><ellipse cx="34" cy="29" rx="21" ry="10"/></clipPath></defs>
+    <rect x="2" y="2" width="60" height="60" rx="16" fill="url(#lgb)"/><rect x="2.8" y="2.8" width="58.4" height="58.4" rx="15.4" fill="none" stroke="rgba(255,255,255,.4)" stroke-width="1.6"/>
+    <circle class="tw" cx="12" cy="12" r="1.5" fill="#fff"/><circle class="tw" cx="23" cy="8" r="1" fill="#fff" style="animation-delay:.7s"/><circle class="tw" cx="57" cy="26" r="1.3" fill="#fff" style="animation-delay:1.2s"/>
+    <path class="tw" d="M50 5l2 5.5 5.5 1.5-5.5 1.5L50 19l-2-5.5L42.500 12l5.500-1.500z" fill="#fff" style="animation-delay:.3s"/>
+    <ellipse cx="17" cy="55" rx="14" ry="5" fill="#fff" opacity=".32"/><ellipse cx="45" cy="58" rx="17" ry="5" fill="#fff" opacity=".24"/>
+    <g class="zp"><path d="M15 27 7 18l4 10zM15 31 7 40l4-10z" fill="#ffc857"/><ellipse cx="34" cy="29" rx="21" ry="10" fill="url(#lgz)"/>
+    <g clip-path="url(#lgc)"><rect x="12" y="27" width="44" height="3.6" fill="#ffc857"/><rect x="12" y="30.600" width="44" height="1.400" fill="#e8836b"/></g>
+    <ellipse cx="32" cy="23.500" rx="13" ry="2.300" fill="#fff" opacity=".6"/>
+    <rect x="27" y="38" width="14" height="6.500" rx="2.500" fill="#2b3a74"/><g fill="#ffe29a"><rect x="29.500" y="40" width="2.500" height="2.500" rx=".5"/><rect x="33" y="40" width="2.500" height="2.500" rx=".5"/><rect x="36.500" y="40" width="2.500" height="2.500" rx=".5"/></g></g>
+  </svg><span class="lt"><b>Oyun</b><small>MERKEZİ</small></span></h1>
   <div id="acct"></div>
   <div class="tabs" id="tabs" role="tablist" hidden>
     <button class="tab on" id="t-oyun">Oyunlar</button>
@@ -312,7 +334,7 @@ var view=$('#view'),stop=null,tab='oyun';
 /* BULUT AYARI: Firebase Realtime Database adresini buraya yaz (örn. 'https://proje-adi-default-rtdb.firebaseio.com').
    Boş bırakırsan hesaplar sadece bu tarayıcıda saklanır. Doluysa hesaplar sunucuda tutulur ve dosya adı/cihaz değişse de çalışır. */
 var CLOUD_URL='https://a-oyun-merkezi-default-rtdb.firebaseio.com';
-var KEY='oyunmerkezi:v1',START=1000,VER='2.1',db,me=null,meKey=null,bal=0;
+var KEY='oyunmerkezi:v1',START=1000,VER='2.3',db,me=null,meKey=null,bal=0;
 /* Hesaplar tek bir kayıt altında tutulur. Güncellemede bu anahtar değişmediği ve
    load() eksik alanları tamamladığı için hesaplar ve bakiyeler korunur. */
 function norm(d){
@@ -1242,26 +1264,35 @@ G.xox=function(el){
 };
 
 /* ===== ONLINE ODA: her kumar oyununun kendi odası, en fazla 4 kişi (Firebase REST) ===== */
+var ROOMB=null,ROOMERR='';
+/* Oda verisi için yazılabilir bir Firebase yolu bulur: önce 'rooms', izin yoksa 'presence/_rooms'. */
+function roomBase(){if(ROOMB)return ROOMB;var cands=['rooms','presence/_rooms'],i=0,u=CLOUD_URL.replace(/\/$/,'')+'/';
+  ROOMB=(function nx(){if(i>=cands.length)return Promise.resolve(null);var c=cands[i++];
+    return fetch(u+c+'/_ping.json',{method:'PUT',body:'1'}).then(function(r){if(!r.ok){ROOMERR=r.status;return nx()}fetch(u+c+'/_ping.json',{method:'DELETE'});return c}).catch(function(){ROOMERR='ağ';return nx()})})()
+    .then(function(b){if(!b)ROOMB=null;else ROOMERR='';return b});
+  return ROOMB}
+function roomErr(){return ROOMERR?' (hata '+ROOMERR+(ROOMERR===401||ROOMERR===403?': Firebase kuralları "rooms" yoluna yazmaya izin vermiyor':'')+')':'.'}
 G.oda=function(el,game){
   var U=CLOUD_URL.replace(/\/$/,''),E=encodeURIComponent,ST={'.sv':'timestamp'},WIN=12000,rid=null,R=null,t=0,mine=null,nx=0,zc=null,zrd=0,zrun=0,RM=null,zp=game==='zeplin',
   ZS={zar:{ic:'🎲',a:'Düşük',b:'Yüksek',la:'Düşük (1-3)',lb:'Yüksek (4-6)',n:6,w:function(x,p){return (x>3?'h':'l')===p},sh:function(x){return x}},
       yazitura:{ic:'🪙',a:'Yazı',b:'Tura',la:'Yazı',lb:'Tura',n:2,w:function(x,p){return (x>1?'h':'l')===p},sh:function(x){return x>1?'Tura':'Yazı'}}},ZZ=ZS[game];
-  function api(m,p,b){return fetch(U+'/'+p+'.json',{method:m,body:b===undefined?undefined:JSON.stringify(b)}).then(function(r){return r.ok?r.json():undefined}).catch(function(){return undefined})}
+  function api(m,p,b){return roomBase().then(function(rb){if(!rb)return undefined;
+    return fetch(U+'/'+p.replace(/^rooms/,rb)+'.json',{method:m,body:b===undefined?undefined:JSON.stringify(b)}).then(function(r){if(!r.ok)ROOMERR=r.status;return r.ok?r.json():undefined}).catch(function(){return undefined})})}
   function lobby(msg){clearInterval(t);if(zc){zc();zc=null}rid=null;R=null;nx=0;
     el.innerHTML='<div class="panel"><h2>Online odalar</h2><div class="msg">'+(msg||'Oda kur ya da bir odaya katıl. En fazla 4 kişi.')+'</div><div class="row"><button id="mk">Oda kur</button><button class="ghost" id="rf">Yenile</button></div></div><div id="rl"></div>';
     $('#mk').onclick=function(){this.disabled=true;make()};$('#rf').onclick=list;list();t=setInterval(list,5000)}
-  function list(){api('GET','rooms').then(function(d){var b=$('#rl');if(!b||rid)return;if(d===undefined){b.innerHTML='<div class="s-empty">Odalar yüklenemedi.</div>';return}
+  function list(){api('GET','rooms').then(function(d){var b=$('#rl');if(!b||rid)return;if(d===undefined){b.innerHTML='<div class="s-empty">Odalar yüklenemedi'+roomErr()+'</div>';return}
     var a=Object.keys(d||{}).filter(function(k){return d[k]&&(d[k].g||'zar')===game&&SOC.now()-(d[k].hb||0)<25000});
     b.innerHTML=a.length?a.map(function(k){var n=Object.keys(d[k].pl||{}).length;return '<div class="s-row n"><div class="s-i"><b>'+esc(d[k].name||'Oda')+'</b><small>'+n+'/4 oyuncu</small></div><button data-r="'+esc(k)+'"'+(n>=4?' disabled':'')+'>'+(n>=4?'Dolu':'Katıl')+'</button></div>'}).join(''):'<div class="s-empty">Açık oda yok. İlk odayı sen kur!</div>';
     b.querySelectorAll('[data-r]').forEach(function(x){x.onclick=function(){x.disabled=true;join(x.dataset.r)}})})}
   function make(){var id=Math.random().toString(36).slice(2,8),p={};p[meKey]={n:me.name,hb:ST,j:ST,pf:pfl()};
-    api('PUT','rooms/'+id,{name:me.name+' odası',g:game,host:meKey,hb:ST,st:'bet',rd:1,bs:ST,pl:p}).then(function(ok){ok===undefined?lobby('Oda kurulamadı.'):enter(id)})}
+    api('PUT','rooms/'+id,{name:me.name+' odası',g:game,host:meKey,hb:ST,st:'bet',rd:1,bs:ST,pl:p}).then(function(ok){ok===undefined?lobby('Oda kurulamadı'+roomErr()):enter(id)})}
   function join(id){api('GET','rooms/'+id).then(function(r){
     if(!r)return lobby('Oda bulunamadı.');
     if((r.g||'zar')!==game)return lobby('Bu oda başka bir oyun için.');
     if(Object.keys(r.pl||{}).length>=4&&!(r.pl||{})[meKey])return lobby('Oda dolu (4/4).');
     api('PUT','rooms/'+id+'/pl/'+E(meKey),{n:me.name,hb:ST,j:ST,pf:pfl()}).then(function(ok){
-      if(ok===undefined)return lobby('Katılınamadı.');
+      if(ok===undefined)return lobby('Katılınamadı'+roomErr());
       api('GET','rooms/'+id+'/pl').then(function(p){p=p||{};var o=Object.keys(p).sort(function(a,b){return ((p[a].j||0)-(p[b].j||0))||(a<b?-1:1)});
         if(o.indexOf(meKey)>=4){api('DELETE','rooms/'+id+'/pl/'+E(meKey));return lobby('Oda doldu (4/4).')}
         enter(id)})})})}
