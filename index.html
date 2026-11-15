@@ -411,7 +411,7 @@ var view=$('#view'),stop=null,tab='oyun';
 /* BULUT AYARI: Firebase Realtime Database adresini buraya yaz (örn. 'https://proje-adi-default-rtdb.firebaseio.com').
    Boş bırakırsan hesaplar sadece bu tarayıcıda saklanır. Doluysa hesaplar sunucuda tutulur ve dosya adı/cihaz değişse de çalışır. */
 var CLOUD_URL='https://a-oyun-merkezi-default-rtdb.firebaseio.com';
-var KEY='oyunmerkezi:v1',START=1000,VER='3.1',db,me=null,meKey=null,bal=0;
+var KEY='oyunmerkezi:v1',START=1000,VER='3.2',db,me=null,meKey=null,bal=0;
 /* Hesaplar tek bir kayıt altında tutulur. Güncellemede bu anahtar değişmediği ve
    load() eksik alanları tamamladığı için hesaplar ve bakiyeler korunur. */
 function norm(d){
@@ -2049,10 +2049,12 @@ function bust(){var go=function(){location.replace(location.pathname+'?u='+Date.
   try{if(navigator.serviceWorker&&navigator.serviceWorker.getRegistrations)navigator.serviceWorker.getRegistrations().then(function(r){r.forEach(function(x){x.unregister()})}).catch(function(){})}catch(e){}
   try{if(window.caches&&caches.keys){caches.keys().then(function(k){return Promise.all(k.map(function(x){return caches.delete(x)}))}).then(go,go);setTimeout(go,1200);return}}catch(e){}
   go()}
+var BASE='';function hs(t){var h=5381,i=t.length;while(i)h=(h*33)^t.charCodeAt(--i);return (h>>>0).toString(36)+t.length}
+/* Sürüm artık dosya içeriğinden otomatik anlaşılır; VER'i elle artırmak gerekmez (sadece ekranda gösterilir). */
 function chkVer(){if(location.protocol==='file:')return;
   function tx(r){return r.ok?r.text():''}
-  Promise.all([Promise.resolve(''),fetch(location.pathname+'?c='+Date.now(),{cache:'reload'}).then(tx)]).then(function(a){
-    var m=/VER='([^']+)'/.exec(a[1]);if(!a[1]||!m||m[1]===VER)return;
+  Promise.all([BASE||fetch(location.pathname,{cache:'force-cache'}).then(tx).then(function(t){return t?hs(t):''}),fetch(location.pathname+'?c='+Date.now(),{cache:'reload'}).then(tx)]).then(function(a){
+    if(!BASE&&a[0])BASE=a[0];if(!a[1]||!BASE||hs(a[1])===BASE)return;
     if($('#upd'))return;
     var d=document.createElement('div');d.id='upd';d.setAttribute('role','status');d.textContent='🔄 Yeni sürüm var - güncellemek için dokun';
     d.style.cssText='position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:70;max-width:92vw;background:#ffc857;color:#1d2b53;padding:11px 16px;border-radius:12px;font-weight:bold;cursor:pointer;box-shadow:0 6px 20px rgba(0,0,0,.4);text-align:center';
