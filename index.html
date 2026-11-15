@@ -411,7 +411,7 @@ var view=$('#view'),stop=null,tab='oyun';
 /* BULUT AYARI: Firebase Realtime Database adresini buraya yaz (örn. 'https://proje-adi-default-rtdb.firebaseio.com').
    Boş bırakırsan hesaplar sadece bu tarayıcıda saklanır. Doluysa hesaplar sunucuda tutulur ve dosya adı/cihaz değişse de çalışır. */
 var CLOUD_URL='https://a-oyun-merkezi-default-rtdb.firebaseio.com';
-var KEY='oyunmerkezi:v1',START=1000,VER='3.4',db,me=null,meKey=null,bal=0;
+var KEY='oyunmerkezi:v1',START=1000,VER='3.2',db,me=null,meKey=null,bal=0;
 /* Hesaplar tek bir kayıt altında tutulur. Güncellemede bu anahtar değişmediği ve
    load() eksik alanları tamamladığı için hesaplar ve bakiyeler korunur. */
 function norm(d){
@@ -1819,6 +1819,10 @@ function blocked(s){var h=gs.hands[s];return (gs.tk>=0&&h.indexOf(gs.tk)>=0)||(g
   function startBots(keep){stopAll();mode=0;seat=0;var n=shuffle(BN.slice()),sts=keep&&gs?gs.seats:[{k:meKey,n:me.name,b:0},{k:'',n:n[0]+' 🤖',b:1},{k:'',n:n[1]+' 🤖',b:1},{k:'',n:n[2]+' 🤖',b:1}];
     gs=keep&&gs?newGame(sts,gs.tot,(gs.st+1)%4):newGame(sts);sel=-1;ss=[];paidId='';drawGame();sched()}
   var NS=33,CO=11,rack=[],rkId='';
+  function rz(t){var r='Seçili taş masadaki hiçbir per/seriye uymuyor.';if(t.w)return r;gs.table.forEach(function(m){if(m.k==='p')return;
+    if(m.k==='s'){if(m.e[0].n===t.n)r=m.e.length>=4?t.n+' perinde 4 renk de dolu, daha fazla taş eklenemez.':'Bu perde '+CN[t.c]+' zaten var.';return}
+    if(m.e[0].c!==t.c)return;var lo=m.l||0,hi=m.h||0,nx=m.a+m.e.length,pv=m.a-1;if(t.n!==nx&&t.n!==pv)return;
+    if(lo+hi>=3)r='Bu seriye bu turda zaten 3 taş işlendi.';else if((t.n===nx&&hi>=2)||(t.n===pv&&lo>=2))r='Serinin bu ucuna bu turda zaten 2 taş işlendi.'});return r}
   function byColor(s){var h=H(s),o=[];for(var c=0;c<4;c++)o.push(h.filter(function(t){return t.c===c&&!t.w}).sort(function(x,y){return x.n-y.n}).map(function(t){return t.id}));o.push(h.filter(function(t){return t.w}).map(function(t){return t.id}));return o}
   function syncRack(h){var st={},hv={};h.forEach(function(id){st[id]=1});rack=rack.map(function(id){if(id>=0&&st[id]&&!hv[id]){hv[id]=1;return id}return -1});h.forEach(function(id){if(!hv[id]){var i=rack.indexOf(-1);if(i>=0)rack[i]=id}})}
   function fillRack(bl){var r=[],p=0,i;for(i=0;i<NS;i++)r.push(-1);bl.forEach(function(b){if(!b.length)return;var c=p%CO;if(c&&c+b.length>CO)p+=CO-c;b.forEach(function(id){if(p<NS)r[p++]=id});p++});rack=r;syncRack(gs.hands[seat<0?0:seat])}
@@ -1856,7 +1860,7 @@ function blocked(s){var h=gs.hands[s];return (gs.tk>=0&&h.indexOf(gs.tk)>=0)||(g
       canI=dph&&gs.op[me2]>=1&&ss.some(function(id){return gs.table.some(function(m){return okTryAdd(m,tl(id),0)})}),
       canS=dph&&inH&&swapJ(me2,sel,0),blk=dph&&blocked(me2);
     canA=canA&&!blk;
-    var why=dph&&ss.length&&!canI?(gs.op[me2]===0?' İşlemek için önce elini açmalısın.':' Seçili taş masadaki pere uymuyor (seride bir uca turda en fazla 2, toplam 3 taş işlenir).'):'',
+    var why=dph&&ss.length&&!canI?(gs.op[me2]===0?' İşlemek için önce elini açmalısın.':' '+rz(tl(ss[0]))):'',
       st=gs.win>=0?'':play?(gs.ph==='draw'?'Sıra sende: deste ya da yandaki taşı al.':blk?'Aldığın taşı/okeyi bir pere kullanmadan taş atamazsın.':'Sıra sende: bir taş seç, at ya da işle.'+why):nm(gs.turn)+' oynuyor...';
     h=rb2()+'<div class="okpb">'+pb+'</div><div class="panel okpn">'+ct+'</div><div class="okzs">'+zn+'</div>'+
       '<div class="panel okrp"><div class="rkw"><div class="rkb" id="okh">'+rkh+'</div></div><div class="rkt"><button class="ghost" id="oz">🧩 Perleri diz</button><button class="ghost" id="oc">🎨 Renge göre diz</button><small>Taşı sürükleyip ıstakada istediğin yere bırak</small></div><div class="msg">'+(gs.op[me2]===2?'Çift açtın ✓':gs.op[me2]?'Açtın ✓':'Açılabilir: <b>'+a.pts+'</b>/'+gs.mo+' puan · <b>'+pr.n+'</b>/'+gs.mp+' çift')+(ss.length>1?' · seçili: '+ss.length+' taş '+(selOk?'✓ per/seri':selP?'✓ çift':'✗ geçersiz'):'')+'</div>'+
