@@ -523,7 +523,8 @@ function getBet(){
   if(b>bal){$('#msg').textContent='Bakiyen yetersiz.';return 0}
   return b;
 }
-function broke(){if(bal<1)$('#msg').textContent+=' Bakiyen bitti, 1000 puan yeniden yüklendi.';if(bal<1)setBal(1000)}
+function broke(){if(bal<1)$('#msg').textContent+=' Bakiyen bitti. Bahissiz oyunları kazanarak +500 puan alabilirsin.'}
+function bonus(n){n=n||500;setBal(bal+n);var o=$('.s-toast');if(o)o.remove();var d=document.createElement('div');d.className='s-toast';d.style.cursor='default';d.textContent='🏆 Kazandın! +'+n+' puan';document.body.appendChild(d);setTimeout(function(){d.remove()},2500)}
 
 var G={};
 
@@ -648,7 +649,7 @@ G.zeplin=function(el){
     $('#mult').textContent=m.toFixed(2)+'x';$('#mult').style.color=m>=10?'#ff9de2':m>=5?'#7be0a4':m>=2?'#ffc857':'#fdf3e3';draw(false);raf=requestAnimationFrame(tick);
   }
   function cash(){
-    var win=Math.floor(bet*m);won=m;state='cashed';setBal(bal+win);if(win>bet)burst();
+    var win=Math.floor(bet*m);won=m;state='cashed';setBal(bal+win);if(win>bet){burst();bonus()}
     $('#msg').textContent=m.toFixed(2)+'x\'te çektin: +'+(win-bet)+' puan';$('#out').disabled=true;
   }
   function crash(){
@@ -677,7 +678,7 @@ G.yazitura=function(el){
     setTimeout(function(){
       var r=ri(2);var c2=$('#coin');if(c2){c2.textContent=r?'Tura':'Yazı';if(!r)c2.classList.add('y')}
       var win=r===pick;
-      if(win){var w=Math.floor(b*1.94);setBal(bal+w);if($('#coin')){burst();$('#coin').classList.add('win')}$('#msg').textContent=(r?'Tura':'Yazı')+' geldi, kazandın: +'+(w-b)}
+      if(win){var w=Math.floor(b*1.94);setBal(bal+w);if(w>b)bonus();if($('#coin')){burst();$('#coin').classList.add('win')}$('#msg').textContent=(r?'Tura':'Yazı')+' geldi, kazandın: +'+(w-b)}
       else $('#msg').textContent=(r?'Tura':'Yazı')+' geldi, '+b+' puan kaybettin.';
       busy=false;broke();
     },700);
@@ -703,7 +704,7 @@ G.zar=function(el){
       clearInterval(iv);var w=win?Math.floor(b*97/chance(over)):0;if(w)setBal(bal+w);
       if(!live)return;
       d.classList.remove('rolling');d.classList.add(win?'wn':'ls');d.textContent=r.toFixed(2);mk.style.left=r+'%';
-      $('#msg').textContent=win?'Kazandın: +'+(w-b):b+' puan kaybettin.';if(win)burst();busy=false;broke();
+      $('#msg').textContent=win?'Kazandın: +'+(w-b):b+' puan kaybettin.';if(win){burst();if(w>b)bonus()}busy=false;broke();
     },45);
   }
   $('#lo').onclick=function(){play(0)};$('#hi').onclick=function(){play(1)};
@@ -739,7 +740,7 @@ G.n2048=function(el){
     tm=setTimeout(function(){gone.forEach(function(t){t.el.remove();T.splice(T.indexOf(t),1)});
       mer.forEach(function(t){paint(t);var b=t.el.firstChild;b.classList.remove('pop','sp');void b.offsetWidth;b.classList.add('pop')});
       spawn();if(sc>bs){bs=sc;try{localStorage.setItem('om-2048',bs)}catch(e){}}hud();busy=false;
-      if(T.some(function(t){return t.v===2048}))$('#msg').textContent='2048! Harikasın 🎉';
+      if(T.some(function(t){return t.v===2048})){if($('#msg').textContent.indexOf('2048!')<0)bonus();$('#msg').textContent='2048! Harikasın 🎉'}
       if(over())$('#msg').textContent='Hamle kalmadı! Skor: '+sc},115)}
   var K={ArrowLeft:0,ArrowRight:1,ArrowUp:2,ArrowDown:3,a:0,d:1,w:2,s:3};
   function kd(e){if(K[e.key]!==undefined){e.preventDefault();mv(K[e.key])}}document.addEventListener('keydown',kd);addEventListener('resize',lay);
@@ -760,7 +761,7 @@ G.mayin=function(el){
   function tap(i){if(over)return;if(fm){if(!o[i])f[i]=f[i]?0:1;draw();return}
     if(f[i]||o[i])return;if(first){plant(i);first=false}
     if(c[i]<0){over=true;o=o.map(function(){return 1});$('#msg').textContent='Mayına bastın! 💥';vib(80)}
-    else{rev(i);if(o.filter(Boolean).length===64-M){over=true;$('#msg').textContent='Tüm mayınları atlattın! 🎉';burst()}}draw()}
+    else{rev(i);if(o.filter(Boolean).length===64-M){over=true;$('#msg').textContent='Tüm mayınları atlattın! 🎉';burst();bonus()}}draw()}
   function draw(){$('#mc').textContent='💣 '+(M-f.reduce(function(a,b){return a+b},0));
     $('#mn').innerHTML=c.map(function(v,i){return '<button data-i="'+i+'"'+(o[i]?' class="o"':'')+'>'+(o[i]?(v<0?'💣':v||''):f[i]?'🚩':'')+'</button>'}).join('')}
   $('#mn').onclick=function(e){var b=e.target.closest('button');if(b)tap(+b.dataset.i)};
@@ -785,7 +786,7 @@ var bT=mk(W,H),brs=[],padS=mk(pw,14),gl=glow(9,'rgba(255,200,87,.9)'),gl2=glow(1
       if(B.x<6||B.x>W-6){B.vx*=-1;B.x=Math.max(6,Math.min(W-6,B.x))}if(B.y<6){B.vy=Math.abs(B.vy);B.y=6}
       if(B.vy>0&&B.y>438&&B.y<456&&Math.abs(B.x-px)<pw/2+6){var s=Math.min(9,Math.hypot(B.vx,B.vy)*1.02);B.vx=(B.x-px)/(pw/2)*s*.8;B.vy=-Math.sqrt(Math.max(4,s*s-B.vx*B.vx));vib(6)}
       var hit=false;br.forEach(function(b){if(!hit&&b.a&&B.x>b.x-5&&B.x<b.x+49&&B.y>b.y-5&&B.y<b.y+23){hit=true;b.a=0;B.vy*=-1;sc+=10;hud();for(var i=0;i<10;i++)pt.push({x:b.x+22,y:b.y+9,vx:(rnd()-.5)*6,vy:(rnd()-.9)*5,l:1,h:b.h})}});
-      if(!br.some(function(b){return b.a})){run=false;over=true;$('#msg').textContent='Hepsini kırdın! 🎉 Yeni tur için dokun.';burst()}
+      if(!br.some(function(b){return b.a})){run=false;over=true;$('#msg').textContent='Hepsini kırdın! 🎉 Yeni tur için dokun.';burst();bonus()}
       else if(B.y>H+10){lv--;vib(50);if(lv<1){over=true;run=false;$('#msg').textContent='Oyun bitti! Skor: '+sc+'. Dokun ve tekrar dene.'}else serve();hud()}}
     else if(!over)B.x=px;
     x.drawImage(bT[0],0,0,W,H);
@@ -815,7 +816,7 @@ var sky=mk(W,H),cl=mk(640,120),pb=mk(52,H),pc=mk(60,20),gr=mk(W+48,60),D2=sky[2]
   function loop(t){if(!c.isConnected)return;var k=Math.min(2,(t-last)/16.67||1);last=t;
     if(st===1){v+=.42*k;y+=v*k;off=(off+2.6*k)%24;ps+=2.6*k;fr+=k;
       if(fr>=88){fr=0;pp.push({x:W+20,g:60+ri(190),s:0})}
-      pp.forEach(function(p){p.x-=2.6*k;if(!p.s&&p.x+26<80){p.s=1;sc++;if(sc>bs){bs=sc;try{localStorage.setItem('om-kus',bs)}catch(e){}}hud()}});
+      pp.forEach(function(p){p.x-=2.6*k;if(!p.s&&p.x+26<80){p.s=1;sc++;if(sc===10)bonus();if(sc>bs){bs=sc;try{localStorage.setItem('om-kus',bs)}catch(e){}}hud()}});
       pp=pp.filter(function(p){return p.x>-60});
       if(y>H-72||y<-20||pp.some(function(p){return 91>p.x&&69<p.x+52&&(y-11<p.g||y+11>p.g+130)})){st=2;t0=performance.now();vib(70);$('#msg').textContent='Skor: '+sc+'. Tekrar için dokun.'}}
     else if(st===0)y=220+Math.sin(t/200)*8;
@@ -844,7 +845,7 @@ G.slot=function(el){
       setTimeout(function(){bs[i].classList.remove('spn');if(++n===3)fin()},d*1000+60)});
     function fin(){var a=rs[0],m=rs[1],z=rs[2],w=0,t='Tutmadı.';
       if(a===m&&m===z){w=b*P[a];t='JACKPOT '+P[a]+'×!'}else if(a===m||m===z||a===z){w=Math.floor(b*.4);t='Çift.'}
-      if(w)setBal(bal+w);busy=false;if(!$('#msg'))return;
+      if(w)setBal(bal+w);if(w>b)bonus();busy=false;if(!$('#msg'))return;
       $('#msg').textContent=w?t+' Geri dönüş: '+w+(w>b?' (+'+(w-b)+')':''):t+' '+b+' puan kaybettin.';if(w>=b*5){burst();vib(40)}broke()}};
 };
 
@@ -905,8 +906,8 @@ G.rulet=function(el){
     busy=true;hit=-1;setBal(bal-T);last=JSON.parse(JSON.stringify(bets));var b0=bets;bets={};stk=[];tbl();
     var r=ri(37);sp={t0:performance.now(),w0:wa,pi:O.indexOf(r)};res=null;bp=null;$('#msg').textContent='Bahisler kapandı, çark dönüyor 🎡';
     setTimeout(function(){var win=0,k;for(k in b0)if(wins(k,r))win+=b0[k]*mul(k);
-      if(win)setBal(bal+win);busy=false;sp=null;bp=O.indexOf(r);res=r;hist.unshift(r);hist=hist.slice(0,12);hit=r;
-      if(!c.isConnected){if(bal<1)setBal(1000);return}
+      if(win)setBal(bal+win);if(win>T)bonus();busy=false;sp=null;bp=O.indexOf(r);res=r;hist.unshift(r);hist=hist.slice(0,12);hit=r;
+      if(!c.isConnected)return;
       hs();tbl();$('#msg').textContent=r+' '+['yeşil','kırmızı','siyah'][r?(R.indexOf(r)>=0?1:2):0]+' geldi. '+(win>T?'Kazandın: +'+(win-T):win===T?'Bahis geri.':win?'Kısmen geri: '+win+' (−'+(T-win)+')':T+' puan kaybettin.');
       if(win>T){burst();vib(40)}broke()},TT*1000+80)};
   tbl();hs();raf=requestAnimationFrame(loop);return function(){cancelAnimationFrame(raf)};
@@ -919,7 +920,7 @@ G.bomba=function(el){
   function draw(end){$('#mg').innerHTML=Array.apply(0,Array(25)).map(function(_,i){var m=mines&&mines.indexOf(i)>=0;
     return '<button data-i="'+i+'"'+(op[i]?' class="s"':end&&m?' class="x"':'')+(op[i]||end?' disabled':'')+'>'+(op[i]?'💎':end&&m?'💣':'')+'</button>'}).join('')}
   function stopG(win){live=false;$('#go').disabled=false;$('#co').disabled=true;draw(true);broke()}
-  function cash(){var w=Math.floor(b*mult(k));setBal(bal+w);$('#msg').textContent='Çektin! '+mult(k).toFixed(2)+'× → +'+(w-b);burst();stopG()}
+  function cash(){var w=Math.floor(b*mult(k));setBal(bal+w);if(w>b)bonus();$('#msg').textContent='Çektin! '+mult(k).toFixed(2)+'× → +'+(w-b);burst();stopG()}
   $('#go').onclick=function(){if(live)return;b=getBet();if(!b)return;M=Math.max(1,Math.min(12,Math.floor(+$('#mc').value)||3));setBal(bal-b);
     mines=[];while(mines.length<M){var i=ri(25);if(mines.indexOf(i)<0)mines.push(i)}k=0;op=[];live=true;this.disabled=true;draw();$('#msg').textContent='Elmas bul, istediğin an çek.'};
   $('#co').onclick=function(){if(live&&k)cash()};
@@ -948,7 +949,7 @@ G.plinko=function(el){
   $('#dr').onclick=function(){if(busy)return;var b=getBet();if(!b)return;busy=true;hit=-1;setBal(bal-b);$('#msg').textContent='';
     var kr=0,p=[{x:W/2,y:16}];for(var s=0;s<R;s++){kr+=ri(2);p.push({x:W/2+(kr-(s+1)/2)*SP,y:s<R-1?40+(s+1)*44-9:H-62})}
     ball={p:p,t0:performance.now()};
-    setTimeout(function(){var w=Math.floor(b*Mx[kr]);if(w)setBal(bal+w);busy=false;ball=null;dirty=true;hit=kr;if(!$('#msg'))return;
+    setTimeout(function(){var w=Math.floor(b*Mx[kr]);if(w)setBal(bal+w);if(w>b)bonus();busy=false;ball=null;dirty=true;hit=kr;if(!$('#msg'))return;
       $('#msg').textContent=Mx[kr]+'× geldi. '+(w>b?'Kazandın: +'+(w-b):w===b?'Bahis geri.':(b-w)+' puan kaybettin.');if(w>b){burst();vib(30)}broke()},280*(R+1)+60)};
   raf=requestAnimationFrame(loop);return function(){cancelAnimationFrame(raf)};
 };
@@ -974,7 +975,7 @@ G.yilan=function(el){
     if(h.x<0||h.y<0||h.x>=N||h.y>=N||sn.some(function(q,i){return i<sn.length-1&&q.x===h.x&&q.y===h.y})){dead=true;try{navigator.vibrate&&navigator.vibrate(60)}catch(e){}$('#msg').textContent='Oyun bitti! Skor: '+score;return}
     prev=sn.map(function(q){return{x:q.x,y:q.y}});sn.unshift(h);
     if(h.x===food.x&&h.y===food.y){
-      score++;SPD=Math.max(80,125-score*2);try{navigator.vibrate&&navigator.vibrate(10)}catch(e){}if(score>best){best=score;try{localStorage.setItem('om-snake-best',best)}catch(e){}}hud();
+      score++;if(score===10)bonus();SPD=Math.max(80,125-score*2);try{navigator.vibrate&&navigator.vibrate(10)}catch(e){}if(score>best){best=score;try{localStorage.setItem('om-snake-best',best)}catch(e){}}hud();
       eat={x:food.x,y:food.y,t:t};var r=c.getBoundingClientRect();burst(r.left+(food.x+.5)*S*r.width/400,r.top+(food.y+.5)*S*r.height/400,16);place();
     }else sn.pop();
     last=t;
@@ -1027,7 +1028,7 @@ G.hafiza=function(el){
         if(lock||b.className||b===first)return;b.dataset.v=v;b.className='flip';setTimeout(function(){b.textContent=v;if(b.className==='flip')b.className='up'},130);
         if(!first){first=b;return}
         moves++;$('#msg').textContent='Hamle: '+moves;
-        if(first.dataset.v===v){first.className=b.className='done';first=null;if(!--left)$('#msg').textContent=moves+' hamlede bitirdin!';burst();Array.prototype.forEach.call($('#mem').children,function(q,qi){q.style.animation='donep .5s '+qi*50+'ms';setTimeout(function(){q.style.animation=''},1400)})}
+        if(first.dataset.v===v){first.className=b.className='done';first=null;if(!--left){$('#msg').textContent=moves+' hamlede bitirdin!';bonus()}burst();Array.prototype.forEach.call($('#mem').children,function(q,qi){q.style.animation='donep .5s '+qi*50+'ms';setTimeout(function(){q.style.animation=''},1400)})}
         else{lock=true;var f=first;first=null;setTimeout(function(){f.className=b.className='no'},300);tm=setTimeout(function(){f.textContent=b.textContent='?';f.className=b.className='';lock=false},700)}
       };$('#mem').appendChild(b)});
   }
@@ -1044,7 +1045,7 @@ G.refleks=function(el){
       tm=setTimeout(function(){st='go';r.classList.remove('wt');r.classList.add('go');r.style.background='#7be0a4';r.textContent='ŞİMDİ!';t0=performance.now()},1000+ri(3000))}
     else if(st==='wait'){clearTimeout(tm);st='done';r.style.background='#ffc857';r.textContent='Çok erken! Tekrar için tıkla'}
     else if(st==='go'){var ms=Math.round(performance.now()-t0);st='done';best=best===null?ms:Math.min(best,ms);
-      r.style.background='#cfd6ea';r.textContent=ms+' ms - '+(ms<200?'Yıldırım!':ms<300?'Çok iyi':ms<450?'İyi':'Biraz yavaş')+'. Tekrar için tıkla';if(ms<250)burst();$('#msg').textContent='En iyi: '+best+' ms'}
+      r.style.background='#cfd6ea';r.textContent=ms+' ms - '+(ms<200?'Yıldırım!':ms<300?'Çok iyi':ms<450?'İyi':'Biraz yavaş')+'. Tekrar için tıkla';if(ms<250)burst();bonus(ms<100?5000:ms<200?2500:ms<300?1500:500);$('#msg').textContent='En iyi: '+best+' ms'}
   }
   r.onclick=fire;r.onkeydown=function(e){if(e.key==='Enter'||e.key===' '){e.preventDefault();fire()}};
   return function(){clearTimeout(tm)};
@@ -1059,7 +1060,7 @@ G.xox=function(el){
   function render(){var bd=$('#b');bd.innerHTML='';b.forEach(function(v,i){var s=document.createElement('button');s.textContent=v;s.className=(v&&i===lastI?'pop ':'')+(v==='X'?'x':v==='O'?'o':'')+(wline&&wline.indexOf(i)>=0?' w':'');s.setAttribute('aria-label','kare '+(i+1));
     s.onclick=function(){if(over||b[i])return;b[i]='X';lastI=i;chk()||(tm=setTimeout(ai,350));render()};bd.appendChild(s)})}
   function chk(){
-    if(win('X')){over=1;$('#msg').textContent='Kazandın!';burst();return 1}
+    if(win('X')){over=1;$('#msg').textContent='Kazandın!';burst();bonus();return 1}
     if(win('O')){over=1;$('#msg').textContent='Bilgisayar kazandı.';return 1}
     if(b.indexOf('')<0){over=1;$('#msg').textContent='Berabere.';return 1}return 0}
   function ai(){
