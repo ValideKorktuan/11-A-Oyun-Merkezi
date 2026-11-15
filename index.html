@@ -1279,8 +1279,10 @@ G.oda=function(el,game){
   function api(m,p,b){return roomBase().then(function(rb){if(!rb)return undefined;
     return fetch(U+'/'+p.replace(/^rooms/,rb)+'.json',{method:m,body:b===undefined?undefined:JSON.stringify(b)}).then(function(r){if(!r.ok)ROOMERR=r.status;return r.ok?r.json():undefined}).catch(function(){return undefined})})}
   function lobby(msg){clearInterval(t);if(zc){zc();zc=null}rid=null;R=null;nx=0;
-    el.innerHTML='<div class="panel"><h2>Online odalar</h2><div class="msg">'+(msg||'Oda kur ya da bir odaya katıl. En fazla 4 kişi.')+'</div><div class="row"><button id="mk">Oda kur</button><button class="ghost" id="rf">Yenile</button></div></div><div id="rl"></div>';
-    $('#mk').onclick=function(){this.disabled=true;make()};$('#rf').onclick=list;list();t=setInterval(list,5000)}
+    el.innerHTML='<div class="panel"><h2>Online odalar</h2><div class="msg">'+(msg||'Oda kur ya da bir odaya katıl. En fazla 4 kişi.')+'</div><div class="row"><button id="mk">Oda kur</button><button class="ghost" id="rf">Yenile</button></div><div class="s-send"><input type="text" id="jc" maxlength="8" placeholder="Oda kodu gir" autocomplete="off" autocapitalize="characters"><button id="jb">Kodla katıl</button></div></div><div id="rl"></div>';
+    $('#mk').onclick=function(){this.disabled=true;make()};$('#rf').onclick=list;
+    function byCode(){var v=($('#jc').value||'').trim().toLowerCase().replace(/[^a-z0-9]/g,'');if(!v)return;$('#jb').disabled=true;join(v)}
+    $('#jb').onclick=byCode;$('#jc').onkeydown=function(e){if(e.key==='Enter')byCode()};list();t=setInterval(list,5000)}
   function list(){api('GET','rooms').then(function(d){var b=$('#rl');if(!b||rid)return;if(d===undefined){b.innerHTML='<div class="s-empty">Odalar yüklenemedi'+roomErr()+'</div>';return}
     var a=Object.keys(d||{}).filter(function(k){return d[k]&&(d[k].g||'zar')===game&&SOC.now()-(d[k].hb||0)<25000});
     b.innerHTML=a.length?a.map(function(k){var n=Object.keys(d[k].pl||{}).length;return '<div class="s-row n"><div class="s-i"><b>'+esc(d[k].name||'Oda')+'</b><small>'+n+'/4 oyuncu</small></div><button data-r="'+esc(k)+'"'+(n>=4?' disabled':'')+'>'+(n>=4?'Dolu':'Katıl')+'</button></div>'}).join(''):'<div class="s-empty">Açık oda yok. İlk odayı sen kur!</div>';
@@ -1297,7 +1299,7 @@ G.oda=function(el,game){
         if(o.indexOf(meKey)>=4){api('DELETE','rooms/'+id+'/pl/'+E(meKey));return lobby('Oda doldu (4/4).')}
         enter(id)})})})}
   function enter(id){clearInterval(t);rid=id;R=null;mine=null;nx=0;zrd=0;zrun=0;zc=null;
-    var top='<div class="panel"><div id="rh"></div>'+(zp?'':'<div class="big" id="dc">'+ZZ.ic+'</div>')+'<div id="pls"></div></div>',lv='<div class="row"><button class="ghost" id="lv">Odadan çık</button>';
+    var CODE=id.toUpperCase(),top='<div class="panel"><div id="rh"></div><div class="row" style="align-items:center"><span>Oda kodu: <b style="letter-spacing:2px;font-size:18px">'+CODE+'</b></span><button class="ghost" id="cp">Kopyala</button><button class="ghost" id="sh">Davet et</button></div>'+(zp?'':'<div class="big" id="dc">'+ZZ.ic+'</div>')+'<div id="pls"></div></div>',lv='<div class="row"><button class="ghost" id="lv">Odadan çık</button>';
     if(zp){
       el.innerHTML=top+'<div id="zg"></div>'+lv+'</div>';
       RM={bet:function(b){if(!R||R.st!=='bet'||(mine&&mine.rd===R.rd))return 0;if(SOC.now()-(R.bs||0)>=WIN){$('#msg').textContent='Bahis süresi doldu, sonraki turu bekle.';return 0}
@@ -1313,6 +1315,11 @@ G.oda=function(el,game){
       $('#go').onclick=function(){if(R&&R.st==='bet'&&!nx){nx=1;roll()}};
     }
     $('#lv').onclick=function(){leave();lobby()};
+    function cpy(txt,btn,ok){function done(){var o=btn.textContent;btn.textContent=ok;setTimeout(function(){btn.textContent=o},1500)}
+      if(navigator.clipboard&&navigator.clipboard.writeText)navigator.clipboard.writeText(txt).then(done,function(){prompt('Kopyala:',txt)});else prompt('Kopyala:',txt)}
+    $('#cp').onclick=function(){cpy(CODE,this,'Kopyalandı ✓')};
+    $('#sh').onclick=function(){var msg='Online odama katıl! Oda kodu: '+CODE+' (Kumar → '+(zp?'Zeplin':ZZ.a+'/'+ZZ.b)+' → Online oda → Kodla katıl)',b=this;
+      if(navigator.share)navigator.share({title:'Online oda daveti',text:msg}).catch(function(){});else cpy(msg,b,'Davet kopyalandı ✓')};
     t=setInterval(poll,1500);poll()}
   function put(p){if(!R||R.st!=='bet'||(mine&&mine.rd===R.rd))return;var b=getBet();if(!b)return;var d=R.rd;
     setBal(bal-b);mine={rd:d,b:b,p:p};
@@ -1340,9 +1347,14 @@ G.oda=function(el,game){
       api('PATCH','rooms/'+id+'/pl/'+E(meKey),{hb:ST});
       if(r.host===meKey){api('PATCH','rooms/'+id,{hb:ST});host(r,pl,n)}
       if(zp){zsync(r);drawZ(r)}else draw()})}
+  var PFC={},PFQ={};
+  function pfFor(k,pf){if(k===meKey)return pfd();var c=PFC[k];
+    if(c)return Object.assign({},pf||{},c);
+    if(!PFQ[k]){PFQ[k]=1;fetch(U+'/board/'+E(k)+'/pf.json').then(function(r){return r.ok?r.json():null}).then(function(d){PFC[k]=(d&&typeof d==='object')?d:{};}).catch(function(){delete PFQ[k]})}
+    return pf||{}}
   function rows(r,txt){var pl=r.pl||{},ks=Object.keys(pl).sort(function(a,b){return (pl[a].j||0)-(pl[b].j||0)});
     return ks.map(function(k){var p=pl[k],s=txt(p,p.r===r.rd,Math.floor(+p.b||0));
-      return '<div class="s-row n">'+avH(p.pf,32)+'<div class="s-i"><b>'+esc(p.n||k)+tgH((p.pf||{}).tg)+(k===r.host?' 👑':'')+(k===meKey?' (sen)':'')+'</b><small>'+s+'</small></div></div>'}).join('')}
+      return '<div class="s-row n">'+avH(pfFor(k,p.pf),32)+'<div class="s-i"><b>'+esc(p.n||k)+tgH((p.pf||{}).tg)+(k===r.host?' 👑':'')+(k===meKey?' (sen)':'')+'</b><small>'+s+'</small></div></div>'}).join('')}
   function head(r){return '<b>'+esc(r.name||'Oda')+'</b> · '+Object.keys(r.pl||{}).length+'/4 oyuncu · Tur '+r.rd}
   function drawZ(r){if(!$('#pls'))return;var left=Math.max(0,Math.ceil((WIN-(SOC.now()-(r.bs||0)))/1000));
     $('#rh').innerHTML=head(r)+' · '+(r.st==='bet'?'Bahis: '+left+' sn':r.st==='run'?'Uçuşta 🎈':'Patladı '+(+(r.h||{})[r.rd]||0).toFixed(2)+'x');
