@@ -356,7 +356,7 @@ var view=$('#view'),stop=null,tab='oyun';
 /* BULUT AYARI: Firebase Realtime Database adresini buraya yaz (örn. 'https://proje-adi-default-rtdb.firebaseio.com').
    Boş bırakırsan hesaplar sadece bu tarayıcıda saklanır. Doluysa hesaplar sunucuda tutulur ve dosya adı/cihaz değişse de çalışır. */
 var CLOUD_URL='https://a-oyun-merkezi-default-rtdb.firebaseio.com';
-var KEY='oyunmerkezi:v1',START=1000,VER='2.3',db,me=null,meKey=null,bal=0;
+var KEY='oyunmerkezi:v1',START=1000,VER='2.6',db,me=null,meKey=null,bal=0;
 /* Hesaplar tek bir kayıt altında tutulur. Güncellemede bu anahtar değişmediği ve
    load() eksik alanları tamamladığı için hesaplar ve bakiyeler korunur. */
 function norm(d){
@@ -535,7 +535,7 @@ var PT={lucky:5000,zep:10000,gambler:15000,fire:20000,owl:25000,shark:35000,king
  PF={emerald:5000,neon:10000,gold:15000,fire:20000,rainbow:30000,royal:50000},
  ADMT=['vip','diamond'],ADMINS=['admin','validekorkutan'],/* yönetici hesap(lar)ın kullanıcı adı (küçük harf) */ ps='me',EC=encodeURIComponent;
 function fbapi(m,p,b){return fetch(CLOUD_URL.replace(/\/$/,'')+'/'+p+'.json',{method:m,body:b===undefined?undefined:JSON.stringify(b)}).then(function(r){return r.ok?r.json():undefined}).catch(function(){return undefined})}
-function isAdm(){return ADMINS.indexOf(meKey)>=0}
+function isAdm(){var k=String(meKey||'').toLowerCase(),n=String((me&&me.name)||'').trim().toLowerCase();return ADMINS.indexOf(k)>=0||ADMINS.indexOf(n)>=0}
 function mig(){if(!me)return;ownO();if(!me.mkt){me.mkt=1;var p=me.pf||{};if(PT[p.tg])me.own.t[p.tg]=1;if(PF[p.fr])me.own.f[p.fr]=1;persist()}paintAv()}
 function grantSync(){if(!me||!CLOUD_URL)return;fbapi('GET','grants/'+EC(meKey)).then(function(g){if(g===undefined||!me)return;g=g||{};var o=ownO(),ch=0;
   ADMT.forEach(function(k){var v=!!g[k];if(!!o.t[k]!==v){ch=1;if(v)o.t[k]=1;else delete o.t[k]}});
@@ -1448,11 +1448,14 @@ G.oda=function(el,game){
 
 $('#ver').innerHTML='Sürüm '+VER+' · <a href="#" id="upb" style="color:var(--acc)">Güncelle</a>';$('#upb').onclick=function(e){e.preventDefault();bust()};
 /* Güncelleme denetimi: sunucudaki sürüm farklıysa "yenile" çubuğu çıkar. Yeni sürümde VER değerini artırmayı unutma. */
-function bust(){location.href=location.pathname+'?u='+Date.now()}
+function bust(){var go=function(){location.replace(location.pathname+'?u='+Date.now())};
+  try{if(navigator.serviceWorker&&navigator.serviceWorker.getRegistrations)navigator.serviceWorker.getRegistrations().then(function(r){r.forEach(function(x){x.unregister()})}).catch(function(){})}catch(e){}
+  try{if(window.caches&&caches.keys){caches.keys().then(function(k){return Promise.all(k.map(function(x){return caches.delete(x)}))}).then(go,go);setTimeout(go,1200);return}}catch(e){}
+  go()}
 function chkVer(){if(location.protocol==='file:')return;
   function tx(r){return r.ok?r.text():''}
-  Promise.all([fetch(location.pathname+location.search,{cache:'force-cache'}).then(tx),fetch(location.pathname+'?c='+Date.now(),{cache:'no-store'}).then(tx)]).then(function(a){
-    var m=/VER='([^']+)'/.exec(a[1]);if(!a[1]||$('#upd')||(a[0]===a[1]&&(!m||m[1]===VER)))return;
+  Promise.all([Promise.resolve(''),fetch(location.pathname+'?c='+Date.now(),{cache:'reload'}).then(tx)]).then(function(a){
+    var m=/VER='([^']+)'/.exec(a[1]);if(!a[1]||$('#upd')||!m||m[1]===VER)return;
     var d=document.createElement('div');d.id='upd';d.setAttribute('role','status');d.textContent='🔄 Yeni sürüm var - güncellemek için dokun';
     d.style.cssText='position:fixed;left:50%;bottom:16px;transform:translateX(-50%);z-index:70;max-width:92vw;background:#ffc857;color:#1d2b53;padding:11px 16px;border-radius:12px;font-weight:bold;cursor:pointer;box-shadow:0 6px 20px rgba(0,0,0,.4);text-align:center';
     d.onclick=bust;document.body.appendChild(d)}).catch(function(){})}
