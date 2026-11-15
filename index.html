@@ -286,7 +286,8 @@ canvas.sn{transform:translateZ(0)}
 .mkc{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:10px;border:1px solid var(--line);border-radius:12px;background:rgba(255,255,255,.04);text-align:center}
 .mkc small{color:var(--mut);font-size:12px}.mkc button{width:100%;padding:7px;font-size:13px}.mkc .tg{margin:0;font-size:12px}
 .av{flex:none!important;aspect-ratio:1/1;min-width:var(--s);max-width:var(--s)}
-#tabs .tab{padding-left:2px;padding-right:2px;font-size:13px;white-space:nowrap}
+#tabs{flex-wrap:wrap}
+#tabs .tab{flex:1 1 30%;padding:10px 6px;font-size:15px;white-space:nowrap}
 </style>
 </head>
 <body>
@@ -311,7 +312,7 @@ var view=$('#view'),stop=null,tab='oyun';
 /* BULUT AYARI: Firebase Realtime Database adresini buraya yaz (örn. 'https://proje-adi-default-rtdb.firebaseio.com').
    Boş bırakırsan hesaplar sadece bu tarayıcıda saklanır. Doluysa hesaplar sunucuda tutulur ve dosya adı/cihaz değişse de çalışır. */
 var CLOUD_URL='https://a-oyun-merkezi-default-rtdb.firebaseio.com';
-var KEY='oyunmerkezi:v1',START=1000,VER='2.0',db,me=null,meKey=null,bal=0;
+var KEY='oyunmerkezi:v1',START=1000,VER='2.1',db,me=null,meKey=null,bal=0;
 /* Hesaplar tek bir kayıt altında tutulur. Güncellemede bu anahtar değişmediği ve
    load() eksik alanları tamamladığı için hesaplar ve bakiyeler korunur. */
 function norm(d){
