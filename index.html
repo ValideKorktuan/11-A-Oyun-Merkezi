@@ -49,7 +49,7 @@ canvas.sn{width:100%;max-width:400px;display:block;margin:0 auto;background:#0a1
 .ttt button{font-size:40px;aspect-ratio:1;padding:0;background:#243263;color:var(--ink)}
 .ref{height:200px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:22px;cursor:pointer;user-select:none;text-align:center;padding:10px;color:#101010}
 .acct{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:-4px 0 12px;font-size:15px}
-.acct span{flex:1}
+.acct>span{flex:1}
 [hidden]{display:none!important}
 input[type=text],input[type=password]{font:inherit;font-size:17px;padding:10px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink);width:100%}
 .note{font-size:12px;color:var(--mut);margin-top:12px}
@@ -285,6 +285,8 @@ canvas.sn{transform:translateZ(0)}
 .mkg{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px;margin-top:8px}
 .mkc{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;padding:10px;border:1px solid var(--line);border-radius:12px;background:rgba(255,255,255,.04);text-align:center}
 .mkc small{color:var(--mut);font-size:12px}.mkc button{width:100%;padding:7px;font-size:13px}.mkc .tg{margin:0;font-size:12px}
+.av{flex:none!important;aspect-ratio:1/1;min-width:var(--s);max-width:var(--s)}
+#tabs .tab{padding-left:2px;padding-right:2px;font-size:13px;white-space:nowrap}
 </style>
 </head>
 <body>
@@ -296,6 +298,7 @@ canvas.sn{transform:translateZ(0)}
     <button class="tab" id="t-kumar">Kumar</button>
     <button class="tab" id="t-sosyal">👥 Sosyal<i class="s-bdg" id="sbdg" hidden></i></button>
     <button class="tab" id="t-profil">👤 Profil</button>
+    <button class="tab" id="t-market">🛒 Market</button>
   </div>
   <div id="view"></div>
   <p class="note">Puanlar tamamen sanaldır, gerçek para içermez. Hesaplar otomatik kaydedilir. <span id="ver"></span></p>
@@ -308,7 +311,7 @@ var view=$('#view'),stop=null,tab='oyun';
 /* BULUT AYARI: Firebase Realtime Database adresini buraya yaz (örn. 'https://proje-adi-default-rtdb.firebaseio.com').
    Boş bırakırsan hesaplar sadece bu tarayıcıda saklanır. Doluysa hesaplar sunucuda tutulur ve dosya adı/cihaz değişse de çalışır. */
 var CLOUD_URL='https://a-oyun-merkezi-default-rtdb.firebaseio.com';
-var KEY='oyunmerkezi:v1',START=1000,VER='1.9',db,me=null,meKey=null,bal=0;
+var KEY='oyunmerkezi:v1',START=1000,VER='2.0',db,me=null,meKey=null,bal=0;
 /* Hesaplar tek bir kayıt altında tutulur. Güncellemede bu anahtar değişmediği ve
    load() eksik alanları tamamladığı için hesaplar ve bakiyeler korunur. */
 function norm(d){
@@ -491,8 +494,8 @@ function isAdm(){return ADMINS.indexOf(meKey)>=0}
 function mig(){if(!me)return;ownO();if(!me.mkt){me.mkt=1;var p=me.pf||{};if(PT[p.tg])me.own.t[p.tg]=1;if(PF[p.fr])me.own.f[p.fr]=1;persist()}paintAv()}
 function grantSync(){if(!me||!CLOUD_URL)return;fbapi('GET','grants/'+EC(meKey)).then(function(g){if(g===undefined||!me)return;g=g||{};var o=ownO(),ch=0;
   ADMT.forEach(function(k){var v=!!g[k];if(!!o.t[k]!==v){ch=1;if(v)o.t[k]=1;else delete o.t[k]}});
-  if(ch){me.ts=Date.now();persist();paintAv();if(tab==='profil')profil()}})}
-function profil(){
+  if(ch){me.ts=Date.now();persist();paintAv();if(tab==='profil'||tab==='market')profil(tab==='market')}})}
+function profil(mk){
   function save(u){me.pf=Object.assign(pfd(),u);me.ts=Date.now();persist();draw();paintAv()}
   function photo(f){var m=$('#pm'),rd=new FileReader();m.textContent='';
     rd.onload=function(){var im=new Image();im.onload=function(){var c=document.createElement('canvas');c.width=c.height=96;var x=c.getContext('2d'),q=Math.min(im.width,im.height);
@@ -527,8 +530,11 @@ function profil(){
       B.innerHTML='<div class="msg">VIP ve Elmas etiketlerini sadece sen verebilirsin. Oyuncu bir sonraki açılışında etiketi alır.</div>'+Object.keys(d).map(function(k){var gk=g[k]||{};
         return '<div class="s-row n">'+avH(d[k].pf,32)+'<div class="s-i"><b>'+esc(d[k].name||k)+'</b></div>'+ADMT.map(function(t){return '<button class="'+(gk[t]?'out':'ghost')+'" data-g="'+esc(k)+'|'+t+'">'+TAGS[t][0].split(' ')[0]+(gk[t]?' ✓':'')+'</button>'}).join('')+'</div>'}).join('');
       B.querySelectorAll('[data-g]').forEach(function(x){x.onclick=function(){var q=x.dataset.g.split('|'),has=!!(g[q[0]]||{})[q[1]];x.disabled=true;fbapi(has?'DELETE':'PUT','grants/'+EC(q[0])+'/'+q[1],has?undefined:1).then(admV)}})})}
-  function draw(){var p=pfd();if(ps==='ad'&&!isAdm())ps='me';
-    view.innerHTML='<div class="tabs">'+[['me','Profilim'],['mk','🛒 Market']].concat(isAdm()?[['ad','🛠 Admin']]:[]).map(function(t){return '<button class="tab'+(ps===t[0]?' on':'')+'" data-p="'+t[0]+'">'+t[1]+'</button>'}).join('')+'</div><div id="pb"></div>';
+  function draw(){var p=pfd(),sub='';
+    if(mk)ps='mk';else if(ps==='mk')ps='me';
+    if(ps==='ad'&&(mk||!isAdm()))ps='me';
+    if(!mk&&isAdm())sub='<div class="tabs">'+[['me','Profilim'],['ad','🛠 Admin']].map(function(t){return '<button class="tab'+(ps===t[0]?' on':'')+'" data-p="'+t[0]+'">'+t[1]+'</button>'}).join('')+'</div>';
+    view.innerHTML=sub+'<div id="pb"></div>';
     view.querySelectorAll('[data-p]').forEach(function(b){b.onclick=function(){ps=b.dataset.p;draw()}});
     ps==='mk'?mkV(p):ps==='ad'?admV():meV(p)}
   draw();grantSync()}
@@ -538,7 +544,8 @@ function show(){
   $('#t-kumar').className='tab'+(tab==='kumar'?' on':'');
   $('#t-sosyal').className='tab'+(tab==='sosyal'?' on':'');
   $('#t-profil').className='tab'+(tab==='profil'?' on':'');
-  if(tab==='profil'){profil();return}
+  $('#t-market').className='tab'+(tab==='market'?' on':'');
+  if(tab==='profil'||tab==='market'){profil(tab==='market');return}
   if(tab==='sosyal'){stop=SOC.view();return}
   var list=tab==='oyun'?NORMAL:KUMAR;
   view.innerHTML='<div class="grid '+(tab==='kumar'?'k':'')+'">'+list.map(function(g){
@@ -556,6 +563,7 @@ function open(id){
 }
 $('#t-oyun').onclick=function(){tab='oyun';show()};
 $('#t-profil').onclick=function(){tab='profil';show()};
+$('#t-market').onclick=function(){tab='market';show()};
 $('#t-kumar').onclick=function(){tab='kumar';show()};
 $('#t-sosyal').onclick=function(){SOC.home();tab='sosyal';show()};
 
