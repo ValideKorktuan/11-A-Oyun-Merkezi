@@ -474,6 +474,10 @@ canvas.sn,.g48{border-radius:20px}
 .s-wal small{color:var(--mut)}
 select{font:inherit;font-size:17px;padding:10px;border-radius:12px;border:1px solid var(--line);background:#0b1330;color:var(--ink);width:100%;min-height:46px}
 .s-row button+button{margin-left:-4px}
+.s-fh{display:flex;align-items:center;gap:10px;margin-bottom:8px}.s-fh input{flex:1;min-width:0}.s-fh small{color:var(--mut);white-space:nowrap}
+.s-net{font-size:12px;color:var(--mut);text-align:center;padding:4px 0}.s-net:empty{display:none}
+.s-qr{display:flex;gap:6px;margin-top:8px;overflow-x:auto;scrollbar-width:none}.s-qr button{flex:0 0 auto;padding:6px 12px;font-size:13px;min-height:34px}
+.s-msg.tx button{background:rgba(255,255,255,.16);color:#fff}
 </style>
 </head>
 <body>
@@ -977,7 +981,7 @@ function mine(){
 
 /* ===== SOSYAL: arkadaşlık, sohbet, sıralama (Firebase REST) ===== */
 var SOC=(function(){
-var DB=CLOUD_URL.replace(/\/$/,''),E=encodeURIComponent,STS={'.sv':'timestamp'},off=0,on=false,fr={},rq={},ib={},pr={},seen={},first=true,sub='fr',chat=null,msgs=[],lastKey='',tT=0,hT=0,cT=0,bT=0,lt={},sending=false,GR={},cld={},sTx=false,wlTo='',pm='send';
+var DB=CLOUD_URL.replace(/\/$/,''),E=encodeURIComponent,STS={'.sv':'timestamp'},off=0,on=false,fr={},rq={},ib={},pr={},seen={},first=true,sub='fr',chat=null,msgs=[],lastKey='',tT=0,hT=0,cT=0,bT=0,lt={},sending=false,GR={},cld={},sTx=false,wlTo='',pm='send',fq='',flt='all';
 function now(){return Date.now()+off}
 function get(p,q){return fetch(DB+'/'+p+'.json'+(q?'?'+q:'')).then(function(r){return r.ok?r.json():undefined}).catch(function(){return undefined})}
 function wr(m,p,b){return fetch(DB+'/'+p+'.json',{method:m,body:JSON.stringify(b)}).then(function(r){return r.ok}).catch(function(){return false})}
@@ -1003,7 +1007,7 @@ function tick(){if(!on||document.hidden)return;var k=meKey;
     if(!on||meKey!==k)return;
     if(a[0]!==undefined)fr=a[0]||{};if(a[1]!==undefined)rq=a[1]||{};if(a[2]!==undefined)ib=a[2]||{};if(a[3]!==undefined)pr=a[3]||{};if(a[4])claim(a[4]);
     if(a[1]!==undefined&&a[2]!==undefined)notify();badge();
-    if(tab==='sosyal'){if(chat){var d=$('#cdot');if(d)d.className='s-dot'+(isOn(chat)?' on':'')}else if((sub==='fr'||sub==='rq')&&$('#sbody'))drawMain()}})}
+    if(tab==='sosyal'){if(chat){var d=$('#cdot');if(d)d.className='s-dot'+(isOn(chat)?' on':'')}else if((sub==='fr'||sub==='rq')&&$('#sbody')&&document.activeElement!==$('#fs'))drawMain()}})}
 function invite(k){return get('users/'+E(k)+'/name').then(function(n){
   if(n===undefined)return {ok:0,msg:'Bağlanamadı, tekrar dene.'};
   if(!n)return {ok:0,msg:'Bu adla bir oyuncu bulunamadı.'};
@@ -1058,11 +1062,18 @@ function userView(k,sb){
     var m3=$('#upay');if(m3)m3.onclick=function(){wlTo=k;sub='wl';drawMain()};var m1=$('#umsg');if(m1)m1.onclick=function(){chat=k;msgs=[];lastKey='';drawChat()};
     var m2=$('#uadd');if(m2)m2.onclick=function(){m2.disabled=true;invite(k).then(function(r){var q=$('#umm');if(q)q.textContent=r.msg;m2.textContent=r.ok?'Gönderildi':'Tekrar dene';m2.disabled=!!r.ok})};
     el.querySelectorAll('[data-g]').forEach(function(x){x.onclick=function(){var tg=x.dataset.g,has=!!g[tg];x.disabled=true;fbapi(has?'DELETE':'PUT','grants/'+E(k)+'/'+tg,has?undefined:1).then(function(){userView(k,sb)})}})})}
-function friends(b){var ks=Object.keys(fr).sort(function(a,c){return (unread(c)-unread(a))||(isOn(c)-isOn(a))||(((ib[c]||{}).ts||0)-((ib[a]||{}).ts||0))});
-  if(!ks.length){b.innerHTML='<div class="s-empty">Henüz arkadaşın yok.<br>Ekle sekmesinden kullanıcı adıyla istek gönder ya da Sıralama sekmesinden oyunculara bak.</div>';return}
-  b.innerHTML=ks.map(function(k){var m=ib[k];return '<div class="s-row" data-k="'+esc(k)+'"><span class="s-dot'+(isOn(k)?' on':'')+'"></span><div class="s-i"><b>'+esc(nm(k))+'</b><small>'+(m?(m.f===meKey?'Sen: ':'')+esc(m.t):isOn(k)?'Çevrimiçi':pr[k]?'Son görülme '+ago(pr[k]):'Çevrimdışı')+'</small></div>'+(unread(k)?'<i class="s-bdg">1</i>':'')+'<button class="ghost" data-p="'+esc(k)+'" title="Para gönder">💸</button><button class="ghost" data-u="'+esc(k)+'" title="Profili gör">👤</button></div>'}).join('');
-  b.querySelectorAll('.s-row').forEach(function(r){r.onclick=function(){chat=r.dataset.k;msgs=[];lastKey='';drawChat()}});
-  b.querySelectorAll('button[data-u]').forEach(function(x){x.onclick=function(e){e.stopPropagation();userView(x.dataset.u,'fr')}});b.querySelectorAll('button[data-p]').forEach(function(x){x.onclick=function(e){e.stopPropagation();wlTo=x.dataset.p;sub='wl';drawMain()}})}
+function pins(){return (me&&me.pin)||[]}
+function friends(b){var all=Object.keys(fr);
+  if(!all.length){b.innerHTML='<div class="s-empty">Henüz arkadaşın yok.<br>Ekle sekmesinden kullanıcı adıyla istek gönder ya da Sıralama sekmesinden oyunculara bak.</div>';return}
+  b.innerHTML='<div class="s-fh"><input type="search" id="fs" placeholder="🔍 Arkadaş ara..." maxlength="16" autocomplete="off" value="'+esc(fq)+'"><small>🟢 '+all.filter(isOn).length+' çevrimiçi · '+all.length+' arkadaş</small></div><div id="fl"></div>';
+  var fs=$('#fs');fs.oninput=function(){fq=fs.value;list()};list();
+  function list(){var P=pins(),s2=fq.trim().toLowerCase(),el=$('#fl');if(!el)return;
+    var ks=all.filter(function(k){return !s2||nm(k).toLowerCase().indexOf(s2)>=0}).sort(function(a,c){return ((P.indexOf(c)>=0)-(P.indexOf(a)>=0))||(unread(c)-unread(a))||(isOn(c)-isOn(a))||(((ib[c]||{}).ts||0)-((ib[a]||{}).ts||0))});
+    el.innerHTML=ks.length?ks.map(function(k){var m=ib[k];return '<div class="s-row" data-k="'+esc(k)+'"><span class="s-dot'+(isOn(k)?' on':'')+'"></span><div class="s-i"><b>'+esc(nm(k))+'</b><small>'+(m?(m.f===meKey?'Sen: ':'')+esc(m.t):isOn(k)?'Çevrimiçi':pr[k]?'Son görülme '+ago(pr[k]):'Çevrimdışı')+'</small></div>'+(unread(k)?'<i class="s-bdg">1</i>':'')+'<button class="ghost" data-f="'+esc(k)+'" title="Sabitle">'+(P.indexOf(k)>=0?'⭐':'☆')+'</button><button class="ghost" data-p="'+esc(k)+'" title="Para gönder">💸</button><button class="ghost" data-u="'+esc(k)+'" title="Profili gör">👤</button></div>'}).join(''):'<div class="s-empty">Eşleşen arkadaş yok.</div>';
+    el.querySelectorAll('.s-row').forEach(function(r){r.onclick=function(){chat=r.dataset.k;msgs=[];lastKey='';drawChat()}});
+    el.querySelectorAll('button[data-u]').forEach(function(x){x.onclick=function(e){e.stopPropagation();userView(x.dataset.u,'fr')}});
+    el.querySelectorAll('button[data-p]').forEach(function(x){x.onclick=function(e){e.stopPropagation();wlTo=x.dataset.p;sub='wl';drawMain()}});
+    el.querySelectorAll('button[data-f]').forEach(function(x){x.onclick=function(e){e.stopPropagation();var p=pins().slice(),i=p.indexOf(x.dataset.f);if(i>=0)p.splice(i,1);else p.unshift(x.dataset.f);me.pin=p.slice(0,8);me.ts=Date.now();persist();list()}})}}
 function requests(b){var ks=Object.keys(rq);if(!ks.length){b.innerHTML='<div class="s-empty">Bekleyen isteğin yok.</div>';return}
   b.innerHTML=ks.map(function(k){return '<div class="s-row n"><div class="s-i"><b>'+esc((rq[k]&&rq[k].name)||k)+'</b><small>Arkadaş olmak istiyor</small></div><button data-a="'+esc(k)+'">Kabul</button><button class="ghost" data-d="'+esc(k)+'">Reddet</button></div>'}).join('');
   b.querySelectorAll('[data-a]').forEach(function(x){x.onclick=function(){x.disabled=true;accept(x.dataset.a)}});
@@ -1098,7 +1109,7 @@ function sendMoney(k,a,note){a=Math.floor(+a);note=(note||'').trim().slice(0,60)
   if(a>MAXTX)return no('Tek seferde en fazla '+nf(MAXTX)+' 🪙 gönderebilirsin.');
   if(a>bal)return no('Bakiyen yetersiz.');
   var x=used();if(x+a>DAYTX)return no('Günlük sınır '+nf(DAYTX)+' 🪙 (bugün kalan '+nf(DAYTX-x)+').');
-  if(sTx)return no('Önceki işlem bitsin, bir saniye bekle.');sTx=true;setBal(bal-a);
+  if(sTx)return no('Önceki işlem bitsin, bir saniye bekle.');if(!confirm('💸 '+nm(k)+' kişisine '+nf(a)+' 🪙 gönderilsin mi?'+(note?'\nNot: '+note:'')+'\nKalan günlük hakkın: '+nf(DAYTX-x-a)+' 🪙'))return no('Vazgeçildi.');sTx=true;setBal(bal-a);
   return wr('PUT','transfers/'+E(k)+'/'+tid(),{f:meKey,n:me.name,a:a,note:note,ts:STS}).then(function(ok){sTx=false;
     if(!ok){setBal(bal+a);return {ok:0,msg:'Gönderilemedi, bakiyen iade edildi. (Firebase kurallarına "transfers" ekli mi?)'}}
     me.txd={d:dkey(),s:x+a};addH({t:'out',k:k,n:nm(k),a:a,note:note,ts:now()});
@@ -1108,21 +1119,25 @@ function claim(d){if(typeof d!=='object')return;Object.keys(d).forEach(function(
   wr('DELETE','transfers/'+E(meKey)+'/'+E(id)).then(function(ok){if(!ok){delete cld[id];return}
     var a=Math.floor(+t.a),n=String(t.n||t.f||'?').slice(0,16);setBal(bal+a);addH({t:'in',k:String(t.f||'').toLowerCase(),n:n,a:a,note:String(t.note||'').slice(0,60),ts:now()});
     toast('💸 '+n+' sana '+nf(a)+' 🪙 gönderdi',null,'wl');if(tab==='sosyal'&&sub==='wl'&&$('#wlh'))histDraw()})})}
-function histDraw(){var h=$('#wlh');if(!h)return;var l=(me&&me.txh)||[];var d=$('#wd');if(d)d.textContent=nf(used())+' / '+nf(DAYTX);
-  h.innerHTML=l.length?l.map(function(x){var i=x.t==='in';return '<div class="s-row n"><span class="s-rk">'+(i?'📥':'📤')+'</span><div class="s-i"><b style="color:var(--'+(i?'ok':'bad')+')">'+(i?'+':'−')+nf(x.a)+' 🪙</b><small>'+(i?'Gönderen: ':'Alıcı: ')+esc(x.n||x.k)+' · '+ago(x.ts)+(x.note?' · '+esc(x.note):'')+'</small></div></div>'}).join(''):'<div class="s-empty">Henüz işlem yok.</div>'}
+function histDraw(){var h=$('#wlh');if(!h)return;var all=(me&&me.txh)||[],l=all.filter(function(x){return flt==='all'||x.t===flt}),d=$('#wd'),ti=0,to=0;if(d)d.textContent=nf(used())+' / '+nf(DAYTX);
+  all.forEach(function(x){if(x.t==='in')ti+=x.a;else to+=x.a});var sm=$('#wsum');if(sm)sm.textContent='Son işlemler: 📥 +'+nf(ti)+' · 📤 −'+nf(to)+' 🪙';
+  h.innerHTML=l.length?l.map(function(x){var i=x.t==='in';return '<div class="s-row n"><span class="s-rk">'+(i?'📥':'📤')+'</span><div class="s-i"><b style="color:var(--'+(i?'ok':'bad')+')">'+(i?'+':'−')+nf(x.a)+' 🪙</b><small>'+(i?'Gönderen: ':'Alıcı: ')+esc(x.n||x.k)+' · '+ago(x.ts)+(x.note?' · '+esc(x.note):'')+'</small></div>'+(!i&&fr[x.k]?'<button class="ghost" data-rp="'+all.indexOf(x)+'" title="Aynısını tekrar gönder">↻</button>':'')+'</div>'}).join(''):'<div class="s-empty">Henüz işlem yok.</div>';
+  h.querySelectorAll('[data-rp]').forEach(function(x){x.onclick=function(){var t=all[x.dataset.rp];if(!t)return;var a=$('#wa');if($('#wt'))$('#wt').value=t.k;if(a)a.value=t.a;if($('#wn'))$('#wn').value=t.note||'';wlTo=t.k;if(a)a.scrollIntoView({block:'center'})}})}
+function bindF(b){b.querySelectorAll('#wf button').forEach(function(x){x.className=x.dataset.f===flt?'':'ghost';x.onclick=function(){flt=x.dataset.f;bindF(b);histDraw()}})}
+function net(){var e=$('#cnet');if(!e)return;var i=0,o=0;((me&&me.txh)||[]).forEach(function(x){if(x.k===chat){if(x.t==='in')i+=x.a;else o+=x.a}});e.textContent=(i||o)?'Bu sohbette: 📤 '+nf(o)+' 🪙 gönderdin · 📥 '+nf(i)+' 🪙 aldın':''}
 function chips(b,inp){b.querySelectorAll('.s-q button').forEach(function(x){x.onclick=function(){var v=x.dataset.v==='max'?Math.min(MAXTX,Math.floor(bal)):x.dataset.v;$(inp).value=v>0?v:''}})}
 function chipH(){return '<div class="s-q">'+QA.map(function(v){return '<button type="button" class="ghost" data-v="'+v+'">'+v+'</button>'}).join('')+'<button type="button" class="ghost" data-v="max">Max</button></div>'}
 function wlView(b){var ks=Object.keys(fr).sort(function(a,c){return nm(a).localeCompare(nm(c),'tr')});
-  b.innerHTML='<div class="panel s-wal"><small>Bakiyen</small><b class="bv">'+Math.floor(bal)+'</b><small>🪙 · Bugün gönderilen: <span id="wd"></span></small></div>'+
+  b.innerHTML='<div class="panel s-wal"><small>Bakiyen</small><b class="bv">'+Math.floor(bal)+'</b><small>🪙 · Bugün gönderilen: <span id="wd"></span></small><small id="wsum" style="display:block;margin-top:4px"></small></div>'+
   (ks.length?'<div class="panel"><h2>💸 Para gönder</h2><div class="row"><label>Kime<select id="wt">'+ks.map(function(k){return '<option value="'+esc(k)+'"'+(k===wlTo?' selected':'')+'>'+esc(nm(k))+'</option>'}).join('')+'</select></label><label>Miktar (en çok '+nf(MAXTX)+')<input type="number" id="wa" min="1" max="'+MAXTX+'" inputmode="numeric"></label></div>'+chipH()+'<div class="row"><label>Not (isteğe bağlı)<input type="text" id="wn" maxlength="60"></label></div><div class="row"><button id="wg">💸 Gönder</button></div><div class="msg" id="wm"></div></div>':'<div class="panel"><div class="s-empty">Para göndermek için önce arkadaş ekle.</div></div>')+
-  '<div class="panel"><h2>Son işlemler</h2><div id="wlh"></div></div>';
-  histDraw();chips(b,'#wa');var g=$('#wg');if(g)g.onclick=function(){var m=$('#wm');g.disabled=true;sendMoney($('#wt').value,$('#wa').value,$('#wn').value).then(function(r){if(m)m.textContent=r.msg;g.disabled=false;if(r.ok){$('#wa').value='';$('#wn').value='';histDraw()}})}}
+  '<div class="panel"><h2>Son işlemler</h2><div class="s-q" id="wf"><button data-f="all">Hepsi</button><button data-f="in">📥 Gelen</button><button data-f="out">📤 Giden</button></div><div id="wlh"></div></div>';
+  histDraw();chips(b,'#wa');bindF(b);var g=$('#wg');if(g)g.onclick=function(){var m=$('#wm');g.disabled=true;sendMoney($('#wt').value,$('#wa').value,$('#wn').value).then(function(r){if(m)m.textContent=r.msg;g.disabled=false;if(r.ok){$('#wa').value='';$('#wn').value='';histDraw()}})}}
 function drawChat(){var k=chat;
-  view.innerHTML='<div class="top"><button class="ghost" id="cb">← Geri</button><h2><span class="s-dot'+(isOn(k)?' on':'')+'" id="cdot"></span> '+esc(nm(k))+'</h2><button class="ghost" id="crm" title="Arkadaşlıktan çıkar">⋯</button></div><div class="s-chat" id="cm"></div>'+
+  view.innerHTML='<div class="top"><button class="ghost" id="cb">← Geri</button><h2><span class="s-dot'+(isOn(k)?' on':'')+'" id="cdot"></span> '+esc(nm(k))+'</h2><button class="ghost" id="crm" title="Arkadaşlıktan çıkar">⋯</button></div><div class="s-net" id="cnet"></div><div class="s-chat" id="cm"></div>'+
    '<div class="s-tools"><button class="ghost" id="cpay">💸 Para gönder</button><button class="ghost" id="creq">🙏 Para iste</button><button class="ghost" id="cemo" aria-label="Emoji">😊</button></div>'+
    '<div class="s-emo" id="cemoj" hidden>'+EMO.map(function(e){return '<button type="button" class="ghost">'+e+'</button>'}).join('')+'</div>'+
    '<div class="panel s-pay" id="cpp" hidden><label>Miktar (🪙)<input type="number" id="cpa" min="1" max="'+MAXTX+'" inputmode="numeric"></label>'+chipH()+'<label>Not (isteğe bağlı)<input type="text" id="cpn" maxlength="60"></label><div class="row"><button id="cpg">Gönder</button><button class="ghost" id="cpx">Vazgeç</button></div></div>'+
-   '<div class="s-send"><input type="text" id="ci" maxlength="300" placeholder="Mesaj yaz..." autocomplete="off"><button id="cs">Gönder</button></div><div class="msg" id="cmsg"></div>';
+   '<div class="s-qr" id="cqr">'+['👋 Selam!','🎮 Oyun oynayalım mı?','🙏 Sağ ol!','👍 Tamam','😂'].map(function(t){return '<button type="button" class="ghost">'+t+'</button>'}).join('')+'</div>'+'<div class="s-send"><input type="text" id="ci" maxlength="300" placeholder="Mesaj yaz..." autocomplete="off"><button id="cs">Gönder</button></div><div class="msg" id="cmsg"></div>';
   $('#cb').onclick=closeChat;$('#crm').onclick=function(){unfriend(k)};$('#cs').onclick=sendMsg;$('#ci').onkeydown=function(e){if(e.key==='Enter')sendMsg()};
   var pp=$('#cpp');chips(pp,'#cpa');
   function op(m){pm=m;$('#cemoj').hidden=true;pp.hidden=false;$('#cpg').textContent=m==='send'?'💸 Gönder':'🙏 İste';$('#cpa').focus()}
@@ -1134,15 +1149,16 @@ function drawChat(){var k=chat;
     if(pm==='send')return sendMoney(k,a,n).then(done);
     if(!(a>=1&&a<=MAXTX))return done({ok:0,msg:'1 ile '+nf(MAXTX)+' arası bir miktar yaz.'});
     postMsg(k,{ty:'rq',a:a,n:n,t:'🙏 '+a+' 🪙 istedi'}).then(function(ok){done({ok:ok,msg:ok?'İstek gönderildi ✓':'Gönderilemedi.'});if(ok)poll()})};
-  renderMsgs();clearInterval(cT);cT=setInterval(poll,2500);poll()}
+  $('#cqr').onclick=function(e){var q=e.target.closest('button');if(q&&!sending){sending=true;postMsg(k,{t:q.textContent}).then(function(){sending=false;poll()})}};net();renderMsgs();clearInterval(cT);cT=setInterval(poll,2500);poll()}
 function renderMsgs(){var c=$('#cm');if(!c)return;var nb=c.scrollHeight-c.scrollTop-c.clientHeight<60,ld='',h='';
   msgs.forEach(function(m){var dt=m.ts?new Date(m.ts).toLocaleDateString('tr-TR',{day:'numeric',month:'long'}):'';if(dt&&dt!==ld){ld=dt;h+='<div class="s-day">'+dt+'</div>'}
     var mine=m.f===meKey,cl='s-msg'+(mine?' me':''),tm='<small>'+hm(m.ts)+'</small>',nt=m.n?'<span>'+esc(m.n)+'</span>':'';
-    if(m.ty==='tx')h+='<div class="'+cl+' tx"><b>💸 '+nf(m.a)+' 🪙</b><span>'+(mine?'Gönderdin':esc(nm(m.f))+' gönderdi')+'</span>'+nt+tm+'</div>';
-    else if(m.ty==='rq'){var pd=seen['p:'+m.id];h+='<div class="'+cl+' rq"><b>🙏 '+nf(m.a)+' 🪙 istendi</b>'+nt+(mine?'':pd?'<span>✓ Ödendi</span>':'<button data-pay="'+esc(m.id)+'" data-a="'+(+m.a||0)+'">'+nf(m.a)+' 🪙 öde</button>')+tm+'</div>'}
+    if(m.ty==='tx')h+='<div class="'+cl+' tx"><b>💸 '+nf(m.a)+' 🪙</b><span>'+(mine?'Gönderdin':esc(nm(m.f))+' gönderdi')+'</span>'+nt+(mine||seen['t:'+m.id]||now()-(m.ts||0)>864e5?'':'<button data-th="'+esc(m.id)+'">🙏 Teşekkürler</button>')+tm+'</div>';
+    else if(m.ty==='rq'){var pd=seen['p:'+m.id]||msgs.some(function(x){return x.ty==='tx'&&x.f!==m.f&&+x.a===+m.a&&x.id>m.id});h+='<div class="'+cl+' rq"><b>🙏 '+nf(m.a)+' 🪙 istendi</b>'+nt+(mine?(pd?'<span>✓ Ödendi</span>':'<span>⏳ Bekliyor</span>'):pd?'<span>✓ Ödendi</span>':'<button data-pay="'+esc(m.id)+'" data-a="'+(+m.a||0)+'">'+nf(m.a)+' 🪙 öde</button>')+tm+'</div>'}
     else h+='<div class="'+cl+'">'+esc(m.t)+tm+'</div>'});
   c.innerHTML=h||'<div class="s-empty">Henüz mesaj yok. İlk mesajı sen yaz 👋</div>';
-  c.querySelectorAll('[data-pay]').forEach(function(x){x.onclick=function(){x.disabled=true;sendMoney(chat,+x.dataset.a,'Talep ödemesi').then(function(r){var sm=$('#cmsg');if(sm)sm.textContent=r.msg;if(r.ok){seen['p:'+x.dataset.pay]=1;ss();renderMsgs()}else x.disabled=false})}});
+  c.querySelectorAll('[data-pay]').forEach(function(x){x.onclick=function(){x.disabled=true;sendMoney(chat,+x.dataset.a,'Talep ödemesi').then(function(r){var sm=$('#cmsg');if(sm)sm.textContent=r.msg;if(r.ok){seen['p:'+x.dataset.pay]=1;ss();net();renderMsgs()}else x.disabled=false})}});
+  c.querySelectorAll('[data-th]').forEach(function(x){x.onclick=function(){x.disabled=true;seen['t:'+x.dataset.th]=1;ss();postMsg(chat,{t:'🙏 Teşekkürler!'}).then(function(){poll()});renderMsgs()}});
   if(nb)c.scrollTop=c.scrollHeight}
 function poll(){if(!chat||document.hidden)return;var k=chat,q='orderBy='+E('"$key"')+(lastKey?'&startAt='+E('"'+lastKey+'"'):'&limitToLast=50');
   return get('chats/'+E(pair(k)),q).then(function(d){if(chat!==k||d===undefined)return;var add=0;
